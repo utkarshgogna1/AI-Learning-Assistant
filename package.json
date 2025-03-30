@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "vercel-build": "cd ai-learning-assistant && npm install && npm run build"
+  },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

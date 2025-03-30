@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd ai-learning-assistant && npm install && npm run build",
+  "outputDirectory": "ai-learning-assistant/.next",
+  "installCommand": "cd ai-learning-assistant && npm install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/ai-learning-assistant/$1"
+    }
+  ]
+} 
