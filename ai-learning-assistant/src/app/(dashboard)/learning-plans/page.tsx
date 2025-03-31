@@ -698,13 +698,13 @@ export default function LearningPlansPage() {
             }
           ];
         } else {
-          topics = [
-            {
+        topics = [
+          {
               id: 'react-advanced',
               title: 'Advanced React Patterns',
               description: 'Learn advanced React patterns and optimization techniques.',
-              resources: [
-                {
+            resources: [
+              {
                   title: 'Advanced React Patterns',
                   type: 'tutorial',
                   url: 'https://kentcdodds.com/blog/advanced-react-patterns',
@@ -713,22 +713,22 @@ export default function LearningPlansPage() {
                 },
                 {
                   title: 'React Performance Optimization',
-                  type: 'article',
+                type: 'article',
                   url: 'https://reactjs.org/docs/optimizing-performance.html',
                   description: 'Official documentation on React performance',
                   difficulty: 'advanced'
                 },
                 {
                   title: 'Advanced React Hooks',
-                  type: 'video',
+                type: 'video',
                   url: 'https://www.youtube.com/watch?v=YKmiLcXiMMo',
                   description: 'Video on advanced usage of React hooks',
                   difficulty: 'advanced'
-                }
-              ]
-            }
-          ];
-        }
+              }
+            ]
+          }
+        ];
+      }
       } else {
         // Generic topics for any other subject with direct links to actual resources
         // Use a resource database approach instead of search links
