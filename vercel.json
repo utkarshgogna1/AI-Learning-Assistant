@@ -1,6 +1,7 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
+  "buildCommand": "cd ai-learning-assistant && npm run build",
+  "outputDirectory": "ai-learning-assistant/.next",
   "rewrites": [
     { "source": "/(.*)", "destination": "/ai-learning-assistant/$1" }
   ]
