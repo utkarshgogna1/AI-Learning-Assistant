@@ -1,26 +1,4 @@
 {
   "buildCommand": "npm run vercel-build",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "outputDirectory": ".next",
-  "ignoreCommand": "node -e \"process.exit(0)\"",
-  "environments": {
-    "development": {
-      "ignoreCommand": "node -e \"process.exit(0)\""
-    },
-    "production": {
-      "ignoreCommand": "node -e \"process.exit(0)\""
-    }
-  },
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        }
-      ]
-    }
-  ]
+  "framework": "nextjs"
 } 

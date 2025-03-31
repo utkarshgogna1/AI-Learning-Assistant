@@ -1,96 +1,56 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
 
-export default function LandingPage() {
+export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b shadow-sm bg-white">
-        <div className="container mx-auto flex items-center justify-between p-4">
-          <div className="text-xl font-bold">AI Learning Assistant</div>
-          <div className="flex gap-4">
-            <Link href="/login">
-              <Button variant="outline">Sign In</Button>
-            </Link>
-            <Link href="/register">
-              <Button>Get Started</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-blue-50 to-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-6">
-            Personalized Learning, <span className="text-blue-600">Powered by AI</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Accelerate your learning journey with adaptive assessments and personalized learning plans
-            tailored to your unique needs and goals.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register">
-              <Button size="lg" className="px-8">Create Free Account</Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="px-8">Sign In</Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
-          <div className="grid md:grid-cols-3 gap-10">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <div className="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
-              <h3 className="text-xl font-semibold mb-3">Take Assessments</h3>
-              <p className="text-gray-600">
-                Evaluate your current knowledge and skills through our adaptive assessment system.
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <div className="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-              <h3 className="text-xl font-semibold mb-3">Get a Learning Plan</h3>
-              <p className="text-gray-600">
-                Receive a personalized learning plan created by AI based on your assessment results.
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md text-center">
-              <div className="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
-              <h3 className="text-xl font-semibold mb-3">Track Your Progress</h3>
-              <p className="text-gray-600">
-                Monitor your learning journey, complete activities, and see your growth over time.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-blue-600 py-16 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Learning?</h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of learners achieving their goals with AI Learning Assistant.
-          </p>
-          <Link href="/register">
-            <Button size="lg" variant="secondary" className="px-8">
-              Create Your Account
-            </Button>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 dark:bg-gray-900">
+      <div className="w-full max-w-4xl mx-auto text-center">
+        <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+          AI Learning Assistant
+        </h1>
+        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          Your personal AI-powered learning companion that adapts to your needs and helps you master new skills more effectively.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
+          <Link 
+            href="/login"
+            className="px-8 py-3 text-lg font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            Get Started
+          </Link>
+          <Link
+            href="/register"
+            className="px-8 py-3 text-lg font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 dark:text-blue-400 dark:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            Create Account
           </Link>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-50 py-10 mt-auto">
-        <div className="container mx-auto px-4 text-center text-gray-500">
-          <p>© {new Date().getFullYear()} AI Learning Assistant. All rights reserved.</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Personalized Learning</h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              Custom learning plans tailored to your goals, learning style, and pace.
+            </p>
+          </div>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">AI-Powered Feedback</h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              Receive intelligent suggestions and adaptive feedback to improve your learning.
+            </p>
+          </div>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Track Progress</h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              Monitor your learning journey with detailed analytics and progress reports.
+            </p>
+          </div>
         </div>
-      </footer>
+        
+        <footer className="text-sm text-gray-500 dark:text-gray-400">
+          <p>© {new Date().getFullYear()} AI Learning Assistant. All rights reserved.</p>
+        </footer>
+      </div>
     </div>
   );
 }
