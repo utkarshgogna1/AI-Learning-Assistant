@@ -1,13 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, Send, ExternalLink, BookOpen } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { supabase } from '@/lib/supabase';
 
 interface Message {
   id: string;
@@ -27,7 +21,6 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [topic, setTopic] = useState<string>('python');
-  const [userId, setUserId] = useState<string>('guest-user');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Initialize chat with a welcome message
@@ -65,37 +58,44 @@ export default function ChatPage() {
     setError(null);
     
     try {
-      const response = await fetch('/api/rag', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          question: input,
-          topic,
-          userId,
-        }),
-      });
+      // For this demo, we'll just simulate a response
+      setTimeout(() => {
+        // Sample responses based on topic and input
+        let sampleResponse = "";
+        
+        if (input.toLowerCase().includes("what") && input.toLowerCase().includes("python")) {
+          sampleResponse = "Python is a high-level, interpreted programming language known for its readability and versatility. It supports multiple programming paradigms, including procedural, object-oriented, and functional programming.";
+        } else if (input.toLowerCase().includes("loop") && topic === "python") {
+          sampleResponse = "In Python, you can use several types of loops:\n\n1. `for` loops: `for i in range(10): print(i)`\n2. `while` loops: `while condition: do_something()`\n3. List comprehensions: `[x for x in range(10)]`";
+        } else if (input.toLowerCase().includes("function") && topic === "python") {
+          sampleResponse = "In Python, you define functions using the `def` keyword:\n\n```python\ndef greet(name):\n    return f'Hello, {name}!'\n\nresult = greet('World')\nprint(result)  # Outputs: Hello, World!\n```";
+        } else if (topic === "javascript") {
+          sampleResponse = "JavaScript is a dynamic programming language that's commonly used for web development. It can run in browsers and on servers using Node.js.";
+        } else {
+          sampleResponse = "That's an interesting question about " + topic + "! In programming, it's important to understand the fundamentals before moving to advanced topics.";
+        }
+        
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: sampleResponse,
+          timestamp: new Date(),
+          sources: [
+            {
+              title: topic + " Documentation",
+              url: topic === "python" ? "https://docs.python.org/3/" : "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+              snippet: "Official documentation"
+            }
+          ],
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        setIsLoading(false);
+      }, 1500);
       
-      if (!response.ok) {
-        throw new Error('Failed to get response from the AI');
-      }
-      
-      const data = await response.json();
-      
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.answer,
-        timestamp: new Date(),
-        sources: data.sources,
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to get a response. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -141,41 +141,51 @@ export default function ChatPage() {
       </div>
       
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4 mr-2" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
+          <div className="flex items-center">
+            <span className="mr-2">
+              <AlertCircle className="h-4 w-4" />
+            </span>
+            <span className="font-bold">Error</span>
+          </div>
+          <p className="ml-6">{error}</p>
+        </div>
       )}
       
       <div className="grid gap-6 grid-cols-1 md:grid-cols-4">
         {/* Topic selection */}
         <div className="md:col-span-1">
-          <Card className="p-4">
+          <div className="bg-white shadow rounded-lg p-4">
             <h2 className="font-semibold mb-4">Select Topic</h2>
             <div className="space-y-2">
-              <Button 
-                variant={topic === 'python' ? 'default' : 'outline'} 
-                className="w-full justify-start"
+              <button 
+                className={`w-full text-left px-4 py-2 rounded ${
+                  topic === 'python' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200'
+                }`}
                 onClick={() => handleTopicChange('python')}
               >
                 Python
-              </Button>
-              <Button 
-                variant={topic === 'javascript' ? 'default' : 'outline'} 
-                className="w-full justify-start"
+              </button>
+              <button 
+                className={`w-full text-left px-4 py-2 rounded ${
+                  topic === 'javascript' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200'
+                }`}
                 onClick={() => handleTopicChange('javascript')}
               >
                 JavaScript
-              </Button>
+              </button>
               {/* Add more topics as needed */}
             </div>
-          </Card>
+          </div>
         </div>
         
         {/* Chat area */}
         <div className="md:col-span-3">
-          <Card className="flex flex-col h-[70vh]">
+          <div className="flex flex-col h-[70vh] bg-white shadow rounded-lg">
             {/* Messages area */}
             <div className="flex-1 p-4 overflow-y-auto">
               {messages.map((message) => (
@@ -188,13 +198,12 @@ export default function ChatPage() {
                   <div 
                     className={`p-3 rounded-lg ${
                       message.role === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted'
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-100'
                     }`}
                   >
                     <div 
                       dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }} 
-                      className="prose prose-sm max-w-none"
                     />
                     
                     {/* Sources section */}
@@ -228,8 +237,8 @@ export default function ChatPage() {
                 </div>
               ))}
               {isLoading && (
-                <div className="flex items-center p-3 rounded-lg bg-muted max-w-[80%]">
-                  <Spinner size="sm" />
+                <div className="flex items-center p-3 rounded-lg bg-gray-100 max-w-[80%]">
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
                   <span className="ml-3">Thinking...</span>
                 </div>
               )}
@@ -239,23 +248,27 @@ export default function ChatPage() {
             {/* Input area */}
             <div className="p-4 border-t">
               <form onSubmit={handleSendMessage} className="flex gap-2">
-                <Input
+                <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask a question..."
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <Button type="submit" disabled={isLoading || !input.trim()}>
+                <button 
+                  type="submit" 
+                  disabled={isLoading || !input.trim()}
+                  className={`px-4 py-2 rounded flex items-center ${
+                    isLoading || !input.trim() 
+                      ? 'bg-blue-300 text-white' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
                   <Send className="h-4 w-4" />
-                  <span className="sr-only">Send</span>
-                </Button>
+                </button>
               </form>
-              <p className="text-xs text-gray-500 mt-2">
-                Try asking questions like "What are Python lists?" or "How do JavaScript promises work?"
-              </p>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </div>
