@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Card } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Spinner } from '../../../components/ui/spinner';
+// Using @ alias imports
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, Send, ExternalLink, BookOpen } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
-import { supabase } from '../../../lib/supabase';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabase';
 
 interface Message {
   id: string;
@@ -21,7 +22,7 @@ interface Message {
   }[];
 }
 
-export default function ChatPage() {
+export default function ChatPageAlias() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -134,7 +135,7 @@ export default function ChatPage() {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">AI Learning Assistant</h1>
+        <h1 className="text-3xl font-bold mb-2">AI Learning Assistant (Alias Import Test)</h1>
         <p className="text-gray-600">
           Chat with the AI to learn programming concepts and get answers to your questions.
         </p>
@@ -168,7 +169,6 @@ export default function ChatPage() {
               >
                 JavaScript
               </Button>
-              {/* Add more topics as needed */}
             </div>
           </Card>
         </div>
