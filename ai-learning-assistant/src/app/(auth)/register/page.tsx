@@ -4,15 +4,72 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Import fallback components
-import { 
-  Button, 
-  Input, 
-  Label, 
-  Alert, 
-  AlertDescription, 
-  FcGoogle 
-} from '@/lib/fallback-components';
+// Basic components defined inline
+const Button = ({ 
+  children, 
+  className = "", 
+  onClick, 
+  type, 
+  disabled,
+  variant
+}) => (
+  <button 
+    type={type || "button"} 
+    className={`px-4 py-2 ${variant === "outline" 
+      ? "bg-white text-gray-800 border border-gray-300" 
+      : "bg-blue-600 text-white"} rounded hover:bg-opacity-90 ${disabled ? 'opacity-50' : ''} ${className}`}
+    onClick={onClick}
+    disabled={disabled}
+  >
+    {children}
+  </button>
+);
+
+const Input = ({ 
+  id, 
+  placeholder, 
+  type, 
+  value, 
+  onChange, 
+  required 
+}) => (
+  <input
+    id={id}
+    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+    placeholder={placeholder}
+    type={type || "text"}
+    value={value}
+    onChange={onChange}
+    required={required}
+  />
+);
+
+const Label = ({ 
+  htmlFor, 
+  children 
+}) => (
+  <label htmlFor={htmlFor} className="block text-sm font-medium mb-1">
+    {children}
+  </label>
+);
+
+const Alert = ({ 
+  variant, 
+  children 
+}) => (
+  <div className={`p-4 rounded ${variant === "destructive" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}`}>
+    {children}
+  </div>
+);
+
+const AlertDescription = ({ 
+  children 
+}) => <div>{children}</div>;
+
+// Simple Google icon replacement
+const FcGoogle = () => (
+  <span className="mr-2 inline-block">G</span>
+);
 
 // Import conditionally to prevent build errors
 let supabase;

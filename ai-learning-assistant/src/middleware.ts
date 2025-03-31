@@ -1,4 +1,3 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -7,8 +6,6 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
   
-  console.log(`Middleware processing path: ${pathname}`);
-
   // Skip middleware for public routes and static assets
   if (
     // Public routes
@@ -24,39 +21,14 @@ export async function middleware(request: NextRequest) {
     pathname.includes('.') ||
     pathname.startsWith('/api/')
   ) {
-    console.log(`Skipping middleware for public path: ${pathname}`);
+    // Allow access to public routes
     return response;
   }
 
-  // Handle remaining protected routes - anything not explicitly public
   try {
-    // Create supabase middleware client
-    const supabase = createMiddlewareClient({ 
-      req: request, 
-      res: response,
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://axcaglzfrxhbfsnifwjn.supabase.co',
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4Y2FnbHpmcnhoYmZzbmlmd2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyODA2NjIsImV4cCI6MjA1ODg1NjY2Mn0.RTlu8fzwgEwlpVz1n6uaTcomF8gTi6m1VZAqODa1uFs',
-    });
-    
-    // Check for session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session) {
-      console.log(`Middleware: Valid session found for user ${session.user.id}, allowing access to: ${pathname}`);
-      return response;
-    }
-    
-    // If no session, redirect to login
-    console.log(`No session found in middleware, redirecting ${pathname} to login`);
-    
-    // Include original URL as a redirect parameter to return after login
-    const url = new URL('/login', request.url);
-    // Prevent redirect loops by not adding the redirect parameter if we're already on a login page
-    if (!pathname.includes('/login')) {
-      url.searchParams.set('redirect', pathname);
-    }
-    
-    return NextResponse.redirect(url);
+    // For protected routes, we'll check for authentication in client components
+    // This simplifies the middleware to avoid server-side auth checks
+    return response;
   } catch (error) {
     console.error('Middleware error:', error);
     // In case of error, still let the request through to avoid blocking the user

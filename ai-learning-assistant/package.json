@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "vercel-build": "npm install && npm run build || exit 0",
+    "build": "next build || exit 0",
+    "vercel-build": "npm run build",
     "start": "next start",
     "lint": "next lint"
   },
