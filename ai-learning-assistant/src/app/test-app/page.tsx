@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
-import { Spinner } from '../../components/ui/spinner';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function TestApp() {
   const [input, setInput] = useState('');

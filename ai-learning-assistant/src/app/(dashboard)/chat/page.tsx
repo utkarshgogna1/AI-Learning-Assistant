@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Card } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Spinner } from '../../../components/ui/spinner';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, Send, ExternalLink, BookOpen } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
-import { supabase } from '../../../lib/supabase';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabase';
 
 interface Message {
   id: string;

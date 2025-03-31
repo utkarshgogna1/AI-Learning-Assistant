@@ -1,76 +1,72 @@
 # AI Learning Assistant
 
-An intelligent learning platform that personalizes education through AI-powered assessments, adaptive learning plans, and real-time progress tracking.
+An AI-powered learning assistant that helps users create personalized learning paths based on assessments and provides smart chat capabilities.
 
 ## Features
 
-- **Assessment System**: Interactive quizzes with knowledge gap analysis and adaptive difficulty scaling
-- **AI Learning Engine**: Personalized study plans using LangChain and OpenAI
-- **Progress Tracking**: Real-time performance monitoring and achievement system
-- **User Authentication**: Secure login and profile management
+- AI-driven assessments to evaluate knowledge levels
+- Personalized learning plans based on assessment results
+- RAG-powered AI chat for programming questions with citations
+- Progress tracking and visualization
+- User authentication and profile management
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React, TailwindCSS
-- **Backend**: Supabase (PostgreSQL)
-- **AI**: OpenAI GPT-4, LangChain, Retrieval Augmented Generation with Pinecone
-- **Analytics**: Real-time tracking via Supabase
+- Next.js 15
+- React
+- TypeScript
+- Tailwind CSS
+- Supabase for authentication and database
+- Shadcn UI components
 
-## Getting Started
+## Development Setup
 
-### Prerequisites
-
-- Node.js 18+ and npm
-- Supabase account
-- OpenAI API key
-- Pinecone account
-
-### Environment Setup
-
-1. Clone the repository
-   ```bash
-   git clone https://github.com/yourusername/ai-learning-assistant.git
-   cd ai-learning-assistant
+1. Clone this repository
+2. Install dependencies:
    ```
-
-2. Install dependencies
-   ```bash
    npm install
    ```
-
-3. Copy the example environment variables
-   ```bash
-   cp .env.example .env.local
+3. Run the development server:
    ```
+   npm run dev
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-4. Fill in your environment variables in `.env.local`
+## Module Import Path Configuration
 
-### Database Setup
+This project uses the `@/` path alias to import modules. For example:
 
-1. Create a new Supabase project
-2. Run the database migration scripts (located in `./supabase/migrations`)
-3. Update your `.env.local` with the Supabase URL and keys
-
-### Running the Development Server
-
-```bash
-npm run dev
+```typescript
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The path mappings are configured in both `tsconfig.json` and `jsconfig.json`.
 
-## Project Structure
+## Deployment
+
+This project is configured for deployment on Vercel:
+
+1. Push your changes to a Git repository
+2. Connect the repository to Vercel
+3. Vercel will automatically detect the Next.js project and deploy it
+
+## Troubleshooting
+
+If you encounter any issues with module resolution during development or build, run this script to automatically fix path imports:
 
 ```
-ai-learning-assistant/
-├── src/                # Source files
-│   ├── app/            # Next.js app router pages
-│   ├── components/     # React components
-│   ├── lib/            # Utility functions and API clients
-│   └── styles/         # Global styles
-├── public/             # Static assets
-├── supabase/           # Supabase configurations
-└── ...config files
+node update-imports.js
+```
+
+## Environment Variables
+
+The following environment variables are required:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_key
 ```
 
 ## Key Components
@@ -94,18 +90,6 @@ ai-learning-assistant/
 - Dashboard with performance analytics
 - Achievement system (streaks, completion badges)
 - Visual progress indicators
-
-## Deployment
-
-### Vercel Deployment
-
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Deploy!
-
-### Docker Deployment
-
-A Dockerfile is included for containerized deployments.
 
 ## License
 

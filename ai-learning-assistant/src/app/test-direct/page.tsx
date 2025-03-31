@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Card } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Spinner } from '../../components/ui/spinner';
-import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export default function TestDirectImportsPage() {
   return (
