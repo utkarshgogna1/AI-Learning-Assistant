@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 
 interface QuizQuestion {
   id: number;
@@ -38,29 +37,14 @@ const QuizPage = () => {
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  
-  // Load user information
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (data.session) {
-        setUserId(data.session.user.id);
-      }
-    };
-    
-    fetchUser();
-  }, []);
   
   // Fetch quiz questions
   useEffect(() => {
-    const fetchQuiz = async () => {
-      setLoading(true);
-      setError(null);
-      
+    // Simulate loading
+    setTimeout(() => {
       try {
-        // For development - use mock data to avoid API dependency
+        // Use mock data for demonstration
         const mockQuestions: QuizQuestion[] = [
           {
             id: 1,
@@ -108,13 +92,13 @@ const QuizPage = () => {
         
         setQuestions(mockQuestions);
         setSelectedAnswers(new Array(mockQuestions.length).fill(-1));
-      } finally {
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load quiz questions.");
         setLoading(false);
       }
-    };
-    
-    fetchQuiz();
-  }, [topic, difficulty, questionCount, userId]);
+    }, 1000); // Fake 1-second loading for demo
+  }, [topic, difficulty, questionCount]);
   
   // Handle answer selection
   const handleAnswerSelect = (answerIndex: number) => {

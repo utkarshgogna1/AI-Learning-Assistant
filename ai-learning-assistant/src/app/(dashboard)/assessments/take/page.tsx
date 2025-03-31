@@ -1,13 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 
 interface QuizQuestion {
   id: number;
@@ -73,7 +67,6 @@ export default function TakeAssessmentPage() {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [userId, setUserId] = useState<string>('guest-user');
   const [score, setScore] = useState(0);
   const [loading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -128,58 +121,12 @@ export default function TakeAssessmentPage() {
       
       // Just log results for now
       console.log('Quiz completed:', {
-        userId,
         quizId: mockQuiz.id,
         score: finalScore,
         answers: selectedAnswers,
         gaps: newKnowledgeGaps,
         timestamp: new Date().toISOString()
       });
-    }
-  }
-
-  async function saveResults(
-    userId: string, 
-    quizId: string, 
-    score: number, 
-    answers: (number | null)[], 
-    gaps: { easy: number, medium: number, hard: number }
-  ) {
-    try {
-      // In a real app, this would be an API call
-      // For now, we'll just log the data
-      console.log('Saving assessment results:', {
-        userId,
-        quizId,
-        score,
-        answers,
-        gaps,
-        timestamp: new Date().toISOString()
-      });
-      
-      // This would normally be an API call
-      /* 
-      const response = await fetch('/api/assessments/save-results', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          quizId,
-          score,
-          answers,
-          gaps,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save results');
-      }
-      */
-    } catch (err) {
-      console.error('Error saving assessment results:', err);
-      setError('Failed to save your results. Please try again.');
     }
   }
 
@@ -200,18 +147,26 @@ export default function TakeAssessmentPage() {
   }
 
   if (loading) {
-    return <div className="flex justify-center items-center h-96">Loading assessment...</div>;
+    return (
+      <div className="flex justify-center items-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <span className="ml-3">Loading assessment...</span>
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <Button onClick={() => window.location.reload()} className="mt-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
           Try Again
-        </Button>
+        </button>
       </div>
     );
   }
@@ -221,9 +176,14 @@ export default function TakeAssessmentPage() {
       <div className="container mx-auto p-6 max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">{mockQuiz.title} - Results</h1>
         
-        <Card className="p-6 mb-8">
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-4">Your Score: {score.toFixed(1)}%</h2>
-          <Progress value={score} className="h-3 mb-6" />
+          <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
+            <div 
+              className="bg-blue-600 h-4 rounded-full" 
+              style={{ width: `${score}%` }}
+            ></div>
+          </div>
           
           <div className="space-y-6">
             {mockQuiz.questions.map((question, index) => {
@@ -251,125 +211,125 @@ export default function TakeAssessmentPage() {
             })}
           </div>
           
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-3">Knowledge Gap Analysis</h3>
-            <p className="mb-4">Based on your answers, here are areas you should focus on:</p>
-            
-            <div className="space-y-2 mb-6">
-              {knowledgeGaps.easy > 0 && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="font-medium">Basic Concepts: {knowledgeGaps.easy} questions missed</p>
-                  <p className="text-sm">Focus on strengthening your foundation</p>
-                </div>
-              )}
-              
-              {knowledgeGaps.medium > 0 && (
-                <div className="p-3 bg-orange-50 border border-orange-200 rounded">
-                  <p className="font-medium">Intermediate Concepts: {knowledgeGaps.medium} questions missed</p>
-                  <p className="text-sm">Work on building your problem-solving skills</p>
-                </div>
-              )}
-              
-              {knowledgeGaps.hard > 0 && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded">
-                  <p className="font-medium">Advanced Concepts: {knowledgeGaps.hard} questions missed</p>
-                  <p className="text-sm">Deep dive into complex topics</p>
-                </div>
-              )}
-            </div>
+          <div className="mt-6 flex gap-4">
+            <button
+              onClick={handleRestartQuiz}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Take Assessment Again
+            </button>
+            <Link
+              href="/assessments"
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            >
+              Back to Assessments
+            </Link>
           </div>
-          
-          <div className="flex justify-between mt-6">
-            <Button onClick={handleRestartQuiz} variant="outline">
-              Retake Quiz
-            </Button>
-            <Button onClick={() => window.location.href = '/learning-plans'}>
-              Get Learning Plan
-            </Button>
-          </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
-  if (quizCompleted) {
+  if (quizCompleted && !showResults) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
-        <Card className="p-6 text-center">
-          <h2 className="text-2xl font-bold mb-4">Assessment Completed!</h2>
-          <p className="text-lg mb-6">
-            You've completed the {mockQuiz.title} assessment.
-          </p>
-          <p className="text-3xl font-bold mb-8">Your Score: {score.toFixed(1)}%</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button onClick={handleViewResults} size="lg">
-              View Detailed Results
-            </Button>
-            <Button onClick={() => window.location.href = '/learning-plans'} variant="outline" size="lg">
-              Get Learning Plan
-            </Button>
-          </div>
-        </Card>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-2xl font-bold mb-4">Assessment Complete!</h2>
+          <p className="mb-4">You have completed the {mockQuiz.title} assessment.</p>
+          <p className="mb-6">Click below to view your results and see how you performed.</p>
+          
+          <button
+            onClick={handleViewResults}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            View Results
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{mockQuiz.title}</h1>
-        <p className="text-gray-600 mb-4">{mockQuiz.description}</p>
-        <div className="flex items-center gap-3">
-          <Progress value={progress} className="h-2 flex-1" />
-          <span className="text-sm font-medium">
-            Question {currentQuestionIndex + 1} of {mockQuiz.questions.length}
-          </span>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">{mockQuiz.title}</h1>
+        <p className="text-gray-600">{mockQuiz.description}</p>
       </div>
-
-      <Card className="p-6 mb-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4 whitespace-pre-line">{currentQuestion.question}</h2>
-          
-          <RadioGroup
-            value={selectedAnswers[currentQuestionIndex]?.toString() || ""}
-            onValueChange={(value) => handleAnswerSelection(parseInt(value))}
-            className="space-y-3"
-          >
-            {currentQuestion.options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50">
-                <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                  {option}
-                </Label>
+      
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm text-gray-500">Question {currentQuestionIndex + 1} of {mockQuiz.questions.length}</span>
+        <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+          {currentQuestion.difficulty.charAt(0).toUpperCase() + currentQuestion.difficulty.slice(1)}
+        </span>
+      </div>
+      
+      <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+        <div 
+          className="bg-blue-600 h-2 rounded-full" 
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+      
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4">{currentQuestion.question}</h2>
+        
+        <div className="space-y-3 mb-6">
+          {currentQuestion.options.map((option, index) => (
+            <div 
+              key={index}
+              onClick={() => handleAnswerSelection(index)}
+              className={`p-4 rounded border cursor-pointer hover:bg-gray-50 ${
+                selectedAnswers[currentQuestionIndex] === index
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-center">
+                <div className={`w-5 h-5 flex items-center justify-center rounded-full border mr-3 ${
+                  selectedAnswers[currentQuestionIndex] === index
+                    ? 'border-blue-500 bg-blue-500 text-white'
+                    : 'border-gray-400'
+                }`}>
+                  {selectedAnswers[currentQuestionIndex] === index && (
+                    <span className="text-xs">✓</span>
+                  )}
+                </div>
+                {option}
               </div>
-            ))}
-          </RadioGroup>
+            </div>
+          ))}
         </div>
-
+        
         {showExplanation && (
-          <div className="bg-blue-50 p-4 rounded-lg mb-6">
-            <h3 className="font-semibold mb-1">Explanation</h3>
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <p className="font-semibold">Explanation:</p>
             <p>{currentQuestion.explanation}</p>
           </div>
         )}
-
+        
         <div className="flex justify-between">
           {!showExplanation && selectedAnswers[currentQuestionIndex] !== null && (
-            <Button onClick={handleShowExplanation} variant="outline">
-              Show Explanation
-            </Button>
-          )}
-          <div className="ml-auto">
-            <Button 
-              onClick={handleNextQuestion} 
-              disabled={selectedAnswers[currentQuestionIndex] === null}
+            <button 
+              onClick={handleShowExplanation}
+              className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
             >
-              {currentQuestionIndex < mockQuiz.questions.length - 1 ? 'Next Question' : 'Finish Assessment'}
-            </Button>
-          </div>
+              Show Explanation
+            </button>
+          )}
+          
+          <button 
+            onClick={handleNextQuestion}
+            disabled={selectedAnswers[currentQuestionIndex] === null}
+            className={`ml-auto px-4 py-2 rounded ${
+              selectedAnswers[currentQuestionIndex] === null
+                ? 'bg-blue-300 text-white'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {currentQuestionIndex < mockQuiz.questions.length - 1 ? 'Next Question' : 'Finish Assessment'}
+          </button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 } 
