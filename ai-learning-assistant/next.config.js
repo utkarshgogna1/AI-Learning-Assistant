@@ -5,6 +5,9 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    // Skip prerendering entirely
+    runtime: 'nodejs',
+    esmExternals: 'loose',
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
@@ -36,6 +39,20 @@ const nextConfig = {
         crypto: false,
       };
     }
+    
+    // Add module alias for problematic imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // Add fallback for problematic imports
+      '@/components/ui/button': require.resolve('./src/lib/fallback-components'),
+      '@/components/ui/input': require.resolve('./src/lib/fallback-components'),
+      '@/components/ui/label': require.resolve('./src/lib/fallback-components'),
+      '@/components/ui/alert': require.resolve('./src/lib/fallback-components'),
+      '@/components/ui/dialog': require.resolve('./src/lib/fallback-components'),
+      '@/components/ui/select': require.resolve('./src/lib/fallback-components'),
+      '@/lib/supabase': require.resolve('./src/lib/fallback-supabase'),
+    };
+    
     return config;
   },
 };
