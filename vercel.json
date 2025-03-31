@@ -1,13 +1,7 @@
 {
-   "buildCommand": "npm install tailwindcss postcss autoprefixer @radix-ui/react-select && npm run build",
-  "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": "ai-learning-assistant/.next",
- 
+  "buildCommand": "npm run build",
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/ai-learning-assistant/$1"
-    }
+    { "source": "/(.*)", "destination": "/ai-learning-assistant/$1" }
   ]
 } 
