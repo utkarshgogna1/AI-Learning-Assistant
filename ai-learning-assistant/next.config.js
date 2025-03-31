@@ -2,9 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    serverActions: {
-      bodySizeLimit: '10mb',
-    },
+    // Remove serverActions setting as it might cause issues
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
@@ -16,8 +14,12 @@ const nextConfig = {
     // your project has TypeScript errors.
     ignoreBuildErrors: true,
   },
-  // Skip static generation and make all pages dynamic
-  staticPageGenerationTimeout: 1,
+  // Increase timeout for static generation
+  staticPageGenerationTimeout: 120,
+  // Disable image optimization if causing issues
+  images: {
+    unoptimized: true,
+  },
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -35,6 +37,8 @@ const nextConfig = {
     
     return config;
   },
+  // Add specific output configuration for Vercel
+  output: 'standalone',
 };
 
 module.exports = nextConfig; 
