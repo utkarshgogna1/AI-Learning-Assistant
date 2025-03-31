@@ -4,6 +4,39 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
+// Define interfaces for component props
+interface ButtonProps {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
+  variant?: string;
+}
+
+interface InputProps {
+  id: string;
+  placeholder?: string;
+  type?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
+}
+
+interface LabelProps {
+  htmlFor: string;
+  children: React.ReactNode;
+}
+
+interface AlertProps {
+  variant?: string;
+  children: React.ReactNode;
+}
+
+interface AlertDescriptionProps {
+  children: React.ReactNode;
+}
+
 // Basic components defined inline
 const Button = ({ 
   children, 
@@ -12,7 +45,7 @@ const Button = ({
   type, 
   disabled,
   variant
-}) => (
+}: ButtonProps) => (
   <button 
     type={type || "button"} 
     className={`px-4 py-2 ${variant === "outline" 
@@ -32,7 +65,7 @@ const Input = ({
   value, 
   onChange, 
   required 
-}) => (
+}: InputProps) => (
   <input
     id={id}
     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -47,16 +80,16 @@ const Input = ({
 const Label = ({ 
   htmlFor, 
   children 
-}) => (
+}: LabelProps) => (
   <label htmlFor={htmlFor} className="block text-sm font-medium mb-1">
     {children}
   </label>
 );
 
 const Alert = ({ 
-  variant, 
+  variant = "default", 
   children 
-}) => (
+}: AlertProps) => (
   <div className={`p-4 rounded ${variant === "destructive" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}`}>
     {children}
   </div>
@@ -64,7 +97,7 @@ const Alert = ({
 
 const AlertDescription = ({ 
   children 
-}) => <div>{children}</div>;
+}: AlertDescriptionProps) => <div>{children}</div>;
 
 // Simple Google icon replacement
 const FcGoogle = () => (
@@ -72,7 +105,7 @@ const FcGoogle = () => (
 );
 
 // Import conditionally to prevent build errors
-let supabase;
+let supabase: any;
 try {
   supabase = require("@/lib/supabase").supabase;
 } catch (error) {
