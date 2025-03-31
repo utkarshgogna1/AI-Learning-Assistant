@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
-import { studyPlanChain } from "@/lib/ai";
+import { generateStudyPlan } from "@/lib/ai";
 
 interface FormData {
   topic: string;
@@ -41,7 +42,7 @@ export function LearningPlanForm({ userId }: { userId: string }) {
     
     try {
       // Generate learning plan using AI
-      const result = await studyPlanChain.invoke({
+      const result = await generateStudyPlan({
         topic: formData.topic,
         currentLevel: formData.currentLevel,
         goals: formData.goals,

@@ -5,9 +5,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { AlertCircle, Send, ExternalLink, BookOpen } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabase';
 
 interface Message {
   id: string;
@@ -29,7 +29,6 @@ export default function ChatPage() {
   const [topic, setTopic] = useState<string>('python');
   const [userId, setUserId] = useState<string>('guest-user');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const supabase = createClientComponentClient();
   
   // Initialize chat with a welcome message
   useEffect(() => {

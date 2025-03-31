@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, BookOpen, BarChart3, PieChart, Home, User, LogOut } from 'lucide-react';
+import { supabase as supabaseClient } from '@/lib/supabase';
 
 export default function DashboardLayout({
   children,
@@ -13,10 +14,24 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const pathname = usePathname();
+  const supabase = supabaseClient;
   const [userName, setUserName] = useState('Guest User');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(true); // Always authenticated
+
+  // Function to check if a link is active
+  const isActive = (path: string) => {
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
+
+  // Function to get the appropriate styling for a nav link
+  const getLinkStyle = (path: string) => {
+    return isActive(path) 
+      ? "text-blue-600 font-medium border-b-2 border-blue-600 pb-2 whitespace-nowrap"
+      : "text-gray-700 hover:text-blue-600 hover:border-b-2 hover:border-blue-600 pb-2 whitespace-nowrap";
+  };
 
   useEffect(() => {
     // Set loading to false immediately to show content
@@ -35,9 +50,9 @@ export default function DashboardLayout({
             .single();
           
           if (profile) {
-            setUserName(profile.full_name || data.session.user.email);
+            setUserName(profile.full_name || profile.email || 'User');
           } else {
-            setUserName(data.session.user.email);
+            setUserName(data.session.user.email || 'User');
           }
         }
       } catch (error) {
@@ -51,10 +66,16 @@ export default function DashboardLayout({
 
   async function handleSignOut() {
     try {
-      await supabase.auth.signOut();
-      setUserName('Guest User');
+      setIsSigningOut(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // After sign out, redirect to home page
+      router.push('/');
+      router.refresh(); // Force a refresh of the page
     } catch (error) {
       console.error('Sign out error:', error);
+      setIsSigningOut(false);
     }
   }
   
@@ -74,49 +95,64 @@ export default function DashboardLayout({
       {/* Header */}
       <header className="border-b shadow bg-white sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between p-4">
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-xl font-bold">
+          <div className="flex items-center flex-shrink-0">
+            <Link href="/dashboard" className="text-xl font-bold whitespace-nowrap mr-6">
               AI Learning Assistant
             </Link>
             
-            <nav className="hidden md:flex gap-6">
-              <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 flex items-center gap-1">
-                <Home className="h-4 w-4" />
+            <nav className="hidden md:flex items-center flex-nowrap overflow-x-auto scrollbar-hide">
+              <Link href="/dashboard" className={`flex items-center gap-1 mx-3 ${getLinkStyle('/dashboard')}`}>
+                <Home className="h-4 w-4 flex-shrink-0" />
                 <span>Dashboard</span>
               </Link>
-              <Link href="/assessments" className="text-gray-700 hover:text-blue-600 flex items-center gap-1">
-                <PieChart className="h-4 w-4" />
+              <Link href="/assessments" className={`flex items-center gap-1 mx-3 ${getLinkStyle('/assessments')}`}>
+                <PieChart className="h-4 w-4 flex-shrink-0" />
                 <span>Assessments</span>
               </Link>
-              <Link href="/learning-plans" className="text-gray-700 hover:text-blue-600 flex items-center gap-1">
-                <BookOpen className="h-4 w-4" />
+              <Link href="/learning-plans" className={`flex items-center gap-1 mx-3 ${getLinkStyle('/learning-plans')}`}>
+                <BookOpen className="h-4 w-4 flex-shrink-0" />
                 <span>Learning Plans</span>
               </Link>
-              <Link href="/progress" className="text-gray-700 hover:text-blue-600 flex items-center gap-1">
-                <BarChart3 className="h-4 w-4" />
+              <Link href="/progress" className={`flex items-center gap-1 mx-3 ${getLinkStyle('/progress')}`}>
+                <BarChart3 className="h-4 w-4 flex-shrink-0" />
                 <span>Progress</span>
               </Link>
-              <Link href="/chat" className="text-gray-700 hover:text-blue-600 flex items-center gap-1">
-                <MessageSquare className="h-4 w-4" />
+              <Link href="/chat" className={`flex items-center gap-1 mx-3 ${getLinkStyle('/chat')}`}>
+                <MessageSquare className="h-4 w-4 flex-shrink-0" />
                 <span>AI Chat</span>
               </Link>
             </nav>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="text-sm">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="text-sm whitespace-nowrap">
               Hello, {userName}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Link href="/profile">
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">Profile</span>
+                <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:bg-gray-100 h-9 px-2 md:px-3">
+                  <User className="h-4 w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline whitespace-nowrap">Profile</span>
                 </Button>
               </Link>
-              <Button variant="outline" size="sm" onClick={handleSignOut} className="flex items-center gap-1">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sign Out</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleSignOut} 
+                disabled={isSigningOut}
+                className="flex items-center gap-1 hover:bg-gray-100 hover:text-red-600 h-9 px-2 md:px-3"
+              >
+                {isSigningOut ? (
+                  <>
+                    <div className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                    <span className="hidden sm:inline whitespace-nowrap">Signing out...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="h-4 w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline whitespace-nowrap">Sign Out</span>
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -126,23 +162,23 @@ export default function DashboardLayout({
       {/* Mobile Navigation (shown at bottom on small screens) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-10">
         <div className="grid grid-cols-5 gap-1">
-          <Link href="/dashboard" className="flex flex-col items-center py-2 text-xs text-gray-700">
+          <Link href="/dashboard" className={`flex flex-col items-center py-2 text-xs ${isActive('/dashboard') ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
             <Home className="h-5 w-5 mb-1" />
             <span>Home</span>
           </Link>
-          <Link href="/assessments" className="flex flex-col items-center py-2 text-xs text-gray-700">
+          <Link href="/assessments" className={`flex flex-col items-center py-2 text-xs ${isActive('/assessments') ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
             <PieChart className="h-5 w-5 mb-1" />
             <span>Assess</span>
           </Link>
-          <Link href="/learning-plans" className="flex flex-col items-center py-2 text-xs text-gray-700">
+          <Link href="/learning-plans" className={`flex flex-col items-center py-2 text-xs ${isActive('/learning-plans') ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
             <BookOpen className="h-5 w-5 mb-1" />
             <span>Plans</span>
           </Link>
-          <Link href="/progress" className="flex flex-col items-center py-2 text-xs text-gray-700">
+          <Link href="/progress" className={`flex flex-col items-center py-2 text-xs ${isActive('/progress') ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
             <BarChart3 className="h-5 w-5 mb-1" />
             <span>Progress</span>
           </Link>
-          <Link href="/chat" className="flex flex-col items-center py-2 text-xs text-gray-700">
+          <Link href="/chat" className={`flex flex-col items-center py-2 text-xs ${isActive('/chat') ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
             <MessageSquare className="h-5 w-5 mb-1" />
             <span>Chat</span>
           </Link>

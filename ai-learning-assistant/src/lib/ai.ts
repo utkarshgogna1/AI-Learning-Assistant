@@ -1,22 +1,20 @@
-import { OpenAI } from '@langchain/openai';
-import { PromptTemplate } from 'langchain/prompts';
+'use server';
+
+import { ChatOpenAI } from '@langchain/openai';
+import { PromptTemplate } from '@langchain/core/prompts';
 import { LLMChain } from 'langchain/chains';
-import { Pinecone } from '@pinecone-database/pinecone';
+// Using getPineconeIndex from server-only code
+import { getPineconeIndex } from './server/pinecone';
 
 // Initialize OpenAI model
-export const openai = new OpenAI({
+const model = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
   modelName: 'gpt-4',
   temperature: 0.7,
 });
 
-// Initialize Pinecone client for vector storage
-const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY!,
-  environment: process.env.PINECONE_ENVIRONMENT!,
-});
-
-export const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
+// Pinecone index is now handled in server/pinecone.ts
+export { getPineconeIndex };
 
 // Study plan generation prompt template
 const studyPlanPromptTemplate = new PromptTemplate({
@@ -36,10 +34,15 @@ const studyPlanPromptTemplate = new PromptTemplate({
 });
 
 // Create LLM chain for generating study plans
-export const studyPlanChain = new LLMChain({
-  llm: openai,
+const studyPlanChainInstance = new LLMChain({
+  llm: model,
   prompt: studyPlanPromptTemplate,
 });
+
+// Remove 'use server' from individual functions since it's now at the file level
+export async function generateStudyPlan(topic: string, currentLevel: string, goals: string) {
+  return studyPlanChainInstance.invoke({ topic, currentLevel, goals });
+}
 
 // Quiz generation prompt template
 const quizGenerationTemplate = new PromptTemplate({
@@ -53,23 +56,27 @@ const quizGenerationTemplate = new PromptTemplate({
   4. Provide a brief explanation of why the correct answer is right
   
   Return the quiz in JSON format with the following structure:
-  {
+  {{
     "questions": [
-      {
+      {{
         "question": "Question text",
         "options": ["Option A", "Option B", "Option C", "Option D"],
         "correctAnswerIndex": 0, // Index of the correct answer (0-based)
         "explanation": "Explanation of why the correct answer is right"
-      }
+      }}
     ]
-  }`,
+  }}`,
 });
 
 // Create LLM chain for generating quizzes
-export const quizGenerationChain = new LLMChain({
-  llm: openai,
+const quizGenerationChainInstance = new LLMChain({
+  llm: model,
   prompt: quizGenerationTemplate,
 });
+
+export async function generateQuiz(topic: string, difficulty: string, numQuestions: number) {
+  return quizGenerationChainInstance.invoke({ topic, difficulty, numQuestions });
+}
 
 // Explanation generation prompt template
 const explanationTemplate = new PromptTemplate({
@@ -87,35 +94,33 @@ const explanationTemplate = new PromptTemplate({
 });
 
 // Create LLM chain for generating explanations
-export const explanationChain = new LLMChain({
-  llm: openai,
+const explanationChainInstance = new LLMChain({
+  llm: model,
   prompt: explanationTemplate,
 });
+
+export async function generateExplanation(concept: string, currentLevel: string) {
+  return explanationChainInstance.invoke({ concept, currentLevel });
+}
 
 // Knowledge gap analysis prompt template
 const gapAnalysisTemplate = new PromptTemplate({
   inputVariables: ["responses", "topic"],
-  template: `Analyze the following student's quiz responses on {topic} to identify knowledge gaps:
-  
-  {responses}
-  
-  Provide:
-  1. Key concepts the student seems to misunderstand
-  2. Specific subtopics they should focus on
-  3. Recommendations for how to address these gaps
-  4. Strengths they demonstrated
-  
-  Format your analysis in a clear, structured way that would be helpful for creating a personalized study plan.`,
+  template: "Analyze the student's quiz responses on {topic} to identify knowledge gaps:\n\n{responses}\n\nProvide key concepts misunderstood, subtopics to focus on, recommendations, and strengths demonstrated.",
 });
 
 // Create LLM chain for knowledge gap analysis
-export const gapAnalysisChain = new LLMChain({
-  llm: openai,
+const gapAnalysisChainInstance = new LLMChain({
+  llm: model,
   prompt: gapAnalysisTemplate,
 });
 
+export async function analyzeKnowledgeGaps(responses: string, topic: string) {
+  return gapAnalysisChainInstance.invoke({ responses, topic });
+}
+
 // Define OpenAI function schema for quiz generation
-export const quizGenerationFunctionSchema = {
+const quizGenerationFunctionSchema = {
   name: "generateQuiz",
   description: "Generate a multiple-choice quiz on a specific topic",
   parameters: {

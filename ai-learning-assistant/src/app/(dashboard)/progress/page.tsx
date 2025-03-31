@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, BookOpen, Award, Clock, Zap, Calendar } from 'lucide-react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '@/lib/supabase';
 
 interface ProgressData {
   userId: string;
@@ -142,7 +142,6 @@ const mockProgressData: ProgressData = {
 export default function ProgressPage() {
   const [progressData, setProgressData] = useState<ProgressData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClientComponentClient();
   
   useEffect(() => {
     // In a real app, this would fetch data from an API

@@ -4,7 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { formatDate, calculateScorePercentage } from "@/lib/utils";
-import { gapAnalysisChain } from "@/lib/ai";
+import { createClient } from "@/lib/supabase";
+import { analyzeKnowledgeGaps } from "@/lib/ai";
 
 interface AssessmentResultsPageProps {
   params: {
@@ -94,10 +95,10 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
   // Call AI to generate knowledge gap analysis
   let knowledgeGapAnalysis;
   try {
-    const result = await gapAnalysisChain.invoke({
-      responses: JSON.stringify(formattedResponses),
-      topic: assessment.title,
-    });
+    const result = await analyzeKnowledgeGaps(
+      JSON.stringify(formattedResponses), 
+      assessment.title
+    );
     knowledgeGapAnalysis = result.text;
   } catch (error) {
     console.error("Error generating knowledge gap analysis:", error);

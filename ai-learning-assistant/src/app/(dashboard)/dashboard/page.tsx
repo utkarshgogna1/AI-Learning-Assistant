@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
@@ -15,9 +14,9 @@ import {
   ListChecks,
   ArrowRight
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function DashboardPage() {
-  const supabase = createClientComponentClient();
   const [userName, setUserName] = useState<string>('User');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -61,7 +60,7 @@ export default function DashboardPage() {
     }
     
     loadUserData();
-  }, [supabase]);
+  }, []);
 
   if (isLoading) {
     return <div className="p-8 text-center">Loading your dashboard...</div>;

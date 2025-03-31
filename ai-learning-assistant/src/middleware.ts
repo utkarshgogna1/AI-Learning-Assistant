@@ -17,12 +17,6 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/register') || 
     pathname.startsWith('/auth/') ||
     pathname === '/api/auth/callback' ||
-    // Dashboard and main app features are now accessible without auth
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/assessments') ||
-    pathname.startsWith('/learning-plans') ||
-    pathname.startsWith('/progress') ||
-    pathname.startsWith('/chat') ||
     
     // Static assets and API routes that don't need auth
     pathname.startsWith('/_next') || 
@@ -37,7 +31,12 @@ export async function middleware(request: NextRequest) {
   // Handle remaining protected routes - anything not explicitly public
   try {
     // Create supabase middleware client
-    const supabase = createMiddlewareClient({ req: request, res: response });
+    const supabase = createMiddlewareClient({ 
+      req: request, 
+      res: response,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://axcaglzfrxhbfsnifwjn.supabase.co',
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4Y2FnbHpmcnhoYmZzbmlmd2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyODA2NjIsImV4cCI6MjA1ODg1NjY2Mn0.RTlu8fzwgEwlpVz1n6uaTcomF8gTi6m1VZAqODa1uFs',
+    });
     
     // Check for session
     const { data: { session } } = await supabase.auth.getSession();

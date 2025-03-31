@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Video, FileText, Code, GraduationCap, Clock } from 'lucide-react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '@/lib/supabase';
 
 interface LearningResource {
   title: string;
@@ -197,7 +197,11 @@ export default function LearningPlansPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newPlanData, setNewPlanData] = useState({
+    topic: '',
+    difficulty: 'beginner',
+  });
   const userId = 'guest-user';
   
   // Get URL parameters
@@ -214,12 +218,27 @@ export default function LearningPlansPage() {
       score: scoreParam
     });
     
-    // For demo, we'll use the mock data
-    setLearningPlans(mockPlans);
+    // Load plans from localStorage first
+    const savedPlans = localStorage.getItem('learningPlans');
+    let loadedPlans = mockPlans;
     
-    if (mockPlans.length > 0) {
-      setActivePlanId(mockPlans[0].id);
-      setSelectedTopic(mockPlans[0].topics[0].id);
+    if (savedPlans) {
+      try {
+        const parsedPlans = JSON.parse(savedPlans);
+        if (Array.isArray(parsedPlans) && parsedPlans.length > 0) {
+          loadedPlans = parsedPlans;
+          console.log('Loaded saved learning plans from localStorage:', parsedPlans.length);
+        }
+      } catch (error) {
+        console.error('Failed to parse saved learning plans:', error);
+      }
+    }
+    
+    setLearningPlans(loadedPlans);
+    
+    if (loadedPlans.length > 0) {
+      setActivePlanId(loadedPlans[0].id);
+      setSelectedTopic(loadedPlans[0].topics[0].id);
     }
     
     setIsLoading(false);
@@ -243,6 +262,14 @@ export default function LearningPlansPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
+  // Save plans to localStorage whenever they change
+  useEffect(() => {
+    if (learningPlans.length > 0) {
+      localStorage.setItem('learningPlans', JSON.stringify(learningPlans));
+      console.log('Saved learning plans to localStorage:', learningPlans.length);
+    }
+  }, [learningPlans]);
+  
   function handleSelectPlan(planId: string) {
     setActivePlanId(planId);
     
@@ -253,122 +280,933 @@ export default function LearningPlansPage() {
     }
   }
   
-  async function generateLearningPlan(topic: string, score: number) {
-    // For demo purposes, we'll just add a new plan to the list
+  async function generateLearningPlan(topic: string, score: number, difficulty: string = 'beginner') {
     try {
-      // In a real app, this would call an API endpoint
-      console.log(`Generating learning plan for topic: ${topic} with score: ${score}`);
+      console.log(`Generating learning plan for ${topic} with difficulty ${difficulty}`);
       
-      // Simulate API call delay
-      console.log('Simulating API delay...');
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Determine skill level based on difficulty
+      const skillLevel = difficulty as 'beginner' | 'intermediate' | 'advanced';
       
-      // Determine skill level and focus based on score
-      const skillLevel = score > 70 ? 'advanced' : score > 40 ? 'intermediate' : 'beginner';
-      console.log(`Determined skill level: ${skillLevel} based on score: ${score}`);
-      
-      // Create topics based on skill level
+      // Create topics based on the selected topic and difficulty
       let topics: LearningPlanTopic[] = [];
       
-      if (topic === 'python') {
-        if (skillLevel === 'beginner') {
+      if (topic.toLowerCase() === 'javascript') {
+        if (difficulty === 'beginner') {
           topics = [
             {
-              id: `${topic}-basics`,
-              title: 'Python Fundamentals',
-              description: 'Learn the basics of Python programming including syntax, variables, and data types',
-              progress: 0,
+              id: 'js-basics',
+              title: 'JavaScript Basics',
+              description: 'Learn the fundamentals of JavaScript including variables, data types, and operators.',
               resources: [
                 {
-                  title: 'Python for Beginners',
+                  title: 'JavaScript Basics - MDN',
                   type: 'article',
-                  url: 'https://docs.python.org/3/tutorial/index.html',
-                  description: 'The official Python tutorial',
-                  difficulty: 'beginner',
-                  completed: false
+                  url: 'https://developer.mozilla.org/en-US/docs/Learn/JavaScript/First_steps',
+                  description: 'MDN guide to JavaScript basics',
+                  difficulty: 'beginner'
                 },
                 {
-                  title: 'Python Basics - Video Course',
+                  title: 'JavaScript Crash Course For Beginners',
                   type: 'video',
-                  url: 'https://www.youtube.com/watch?v=_uQrJ0TkZlc',
-                  description: 'Comprehensive Python introduction',
-                  difficulty: 'beginner',
-                  completed: false
+                  url: 'https://www.youtube.com/watch?v=hdI2bqOjy3c',
+                  description: 'Comprehensive video covering JavaScript basics',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'JavaScript Variables and Data Types',
+                  type: 'tutorial',
+                  url: 'https://javascript.info/variables',
+                  description: 'In-depth tutorial on JavaScript variables',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'JavaScript Basics Exercises',
+                  type: 'exercise',
+                  url: 'https://www.w3schools.com/js/exercise_js.asp?filename=exercise_js_variables1',
+                  description: 'Interactive exercises to practice JavaScript basics',
+                  difficulty: 'beginner'
                 }
               ]
             },
             {
-              id: `${topic}-control-flow`,
-              title: 'Control Flow in Python',
-              description: 'Master Python conditionals, loops, and control structures',
-              progress: 0,
+              id: 'js-functions',
+              title: 'JavaScript Functions',
+              description: 'Learn how to create and use functions in JavaScript.',
               resources: [
                 {
-                  title: 'Python Control Flow',
+                  title: 'JavaScript Functions - MDN',
                   type: 'article',
-                  url: 'https://docs.python.org/3/tutorial/controlflow.html',
-                  description: 'Official documentation on control flow statements',
-                  difficulty: 'beginner',
-                  completed: false
+                  url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions',
+                  description: 'MDN guide to JavaScript functions',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'JavaScript Functions Tutorial',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=xUI5Tsl2JpY',
+                  description: 'Video tutorial on JavaScript functions',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Function Practice Exercises',
+                  type: 'exercise',
+                  url: 'https://github.com/Asabeneh/30-Days-Of-JavaScript/blob/master/07_Day_Functions/07_day_functions.md',
+                  description: 'GitHub repository with JavaScript function exercises',
+                  difficulty: 'beginner'
+                }
+              ]
+            },
+            {
+              id: 'js-dom',
+              title: 'DOM Manipulation',
+              description: 'Learn how to manipulate the DOM with JavaScript.',
+              resources: [
+                {
+                  title: 'DOM Manipulation - MDN',
+                  type: 'article',
+                  url: 'https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Manipulating_documents',
+                  description: 'MDN guide to manipulating documents',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'JavaScript DOM Manipulation Course',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=5fb2aPlgoys',
+                  description: 'Video course on DOM manipulation',
+                  difficulty: 'beginner'
                 }
               ]
             }
           ];
-        } else if (skillLevel === 'intermediate') {
+        } else if (difficulty === 'intermediate') {
           topics = [
             {
-              id: `${topic}-data-structures`,
-              title: 'Python Data Structures',
-              description: 'Deep dive into Python data structures like lists, dictionaries, and sets',
-              progress: 0,
+              id: 'js-objects',
+              title: 'JavaScript Objects and Prototypes',
+              description: 'Master JavaScript objects and prototypes.',
               resources: [
                 {
-                  title: 'Python Data Structures Guide',
+                  title: 'Working with Objects - MDN',
+                  type: 'article',
+                  url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects',
+                  description: 'MDN guide to working with objects',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Object-Oriented JavaScript',
+                  type: 'tutorial',
+                  url: 'https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Object-oriented_programming',
+                  description: 'Tutorial on object-oriented JavaScript',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'JavaScript Objects and Classes Tutorial',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=2ZphE5HcQPQ',
+                  description: 'Video tutorial on JavaScript objects and classes',
+                  difficulty: 'intermediate'
+                }
+              ]
+            },
+            {
+              id: 'js-async',
+              title: 'Asynchronous JavaScript',
+              description: 'Learn about promises, async/await, and callbacks.',
+              resources: [
+                {
+                  title: 'Async JavaScript - MDN',
+                  type: 'tutorial',
+                  url: 'https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous',
+                  description: 'MDN tutorial on asynchronous JavaScript',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'JavaScript Promises In 10 Minutes',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=DHvZLI7Db8E',
+                  description: 'Video tutorial on JavaScript promises',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Async/Await in JavaScript',
+                  type: 'article',
+                  url: 'https://javascript.info/async-await',
+                  description: 'In-depth article on async/await',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Asynchronous JavaScript Exercises',
+                  type: 'exercise',
+                  url: 'https://github.com/sorrycc/awesome-javascript#promises',
+                  description: 'Collection of resources and exercises for async JavaScript',
+                  difficulty: 'intermediate'
+                }
+              ]
+            }
+          ];
+        } else {
+          topics = [
+            {
+              id: 'js-advanced-patterns',
+              title: 'Advanced JavaScript Patterns',
+              description: 'Master advanced JavaScript design patterns.',
+              resources: [
+                {
+                  title: 'JavaScript Design Patterns',
+                  type: 'book',
+                  url: 'https://addyosmani.com/resources/essentialjsdesignpatterns/book/',
+                  description: 'Essential JS design patterns book',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Functional Programming in JavaScript',
+                  type: 'article',
+                  url: 'https://opensource.com/article/17/6/functional-javascript',
+                  description: 'Introduction to functional programming in JavaScript',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Advanced JavaScript Concepts',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=R9I85RhI7Cg',
+                  description: 'Video course on advanced JavaScript concepts',
+                  difficulty: 'advanced'
+                }
+              ]
+            },
+            {
+              id: 'js-performance',
+              title: 'JavaScript Performance Optimization',
+              description: 'Learn advanced techniques to optimize JavaScript performance.',
+              resources: [
+                {
+                  title: 'JavaScript Performance - MDN',
+                  type: 'article',
+                  url: 'https://developer.mozilla.org/en-US/docs/Learn/Performance/JavaScript',
+                  description: 'MDN guide to JavaScript performance',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'JavaScript Engine and Runtime',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=8aGhZQkoFbQ',
+                  description: 'Video on how JavaScript works under the hood',
+                  difficulty: 'advanced'
+                }
+              ]
+            }
+          ];
+        }
+      } else if (topic.toLowerCase() === 'python') {
+        if (difficulty === 'beginner') {
+          topics = [
+            {
+              id: 'python-basics',
+              title: 'Python Basics',
+              description: 'Learn the fundamentals of Python including variables, data types, and control structures.',
+              resources: [
+                {
+                  title: 'Python Basics - Official Tutorial',
+                  type: 'article',
+                  url: 'https://docs.python.org/3/tutorial/introduction.html',
+                  description: 'Official Python tutorial',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Python for Beginners - Full Course',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=_uQrJ0TkZlc',
+                  description: 'Comprehensive Python course for beginners',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Python Basics Exercises',
+                  type: 'exercise',
+                  url: 'https://www.w3schools.com/python/exercise.asp',
+                  description: 'Interactive exercises to practice Python',
+                  difficulty: 'beginner'
+                }
+              ]
+            },
+            {
+              id: 'python-data-structures',
+              title: 'Python Data Structures',
+              description: 'Learn about lists, dictionaries, sets, and tuples in Python.',
+              resources: [
+                {
+                  title: 'Python Data Structures',
                   type: 'article',
                   url: 'https://docs.python.org/3/tutorial/datastructures.html',
-                  description: 'Comprehensive guide to Python data structures',
-                  difficulty: 'intermediate',
-                  completed: false
+                  description: 'Official Python documentation on data structures',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Python Lists, Tuples, Sets & Dictionaries',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=W8KRzm-HUcc',
+                  description: 'Video tutorial on Python data structures',
+                  difficulty: 'beginner'
+                }
+              ]
+            }
+          ];
+        } else if (difficulty === 'intermediate') {
+          topics = [
+            {
+              id: 'python-oop',
+              title: 'Object-Oriented Python',
+              description: 'Learn about classes, objects, and inheritance in Python.',
+              resources: [
+                {
+                  title: 'OOP in Python',
+                  type: 'tutorial',
+                  url: 'https://realpython.com/python3-object-oriented-programming/',
+                  description: 'Real Python tutorial on OOP',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Python OOP Tutorials',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=ZDa-Z5JzLYM&list=PL-osiE80TeTsqhIuOqKhwlXsIBIdSeYtc',
+                  description: 'Video series on object-oriented programming in Python',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Python OOP Exercises',
+                  type: 'exercise',
+                  url: 'https://pynative.com/python-object-oriented-programming-oop-exercise/',
+                  description: 'Practice exercises for Python OOP',
+                  difficulty: 'intermediate'
+                }
+              ]
+            },
+            {
+              id: 'python-modules',
+              title: 'Python Modules and Packages',
+              description: 'Learn how to organize code with modules and packages.',
+              resources: [
+                {
+                  title: 'Python Modules and Packages',
+                  type: 'article',
+                  url: 'https://realpython.com/python-modules-packages/',
+                  description: 'Real Python guide to modules and packages',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Python Packages Tutorial',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=6tNS--WetLI',
+                  description: 'Video tutorial on Python packages',
+                  difficulty: 'intermediate'
+                }
+              ]
+            }
+          ];
+        } else {
+          topics = [
+            {
+              id: 'python-advanced',
+              title: 'Advanced Python Concepts',
+              description: 'Master advanced Python techniques like decorators, generators, and metaclasses.',
+              resources: [
+                {
+                  title: 'Advanced Python Features',
+                  type: 'article',
+                  url: 'https://docs.python.org/3/howto/functional.html',
+                  description: 'Python documentation on functional programming',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Python Decorators',
+                  type: 'tutorial',
+                  url: 'https://realpython.com/primer-on-python-decorators/',
+                  description: 'Real Python tutorial on decorators',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Advanced Python - Metaclasses',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=NAQEj-c2CI8',
+                  description: 'Video on Python metaclasses',
+                  difficulty: 'advanced'
                 }
               ]
             }
           ];
         }
-      } else if (topic === 'javascript') {
-        if (skillLevel === 'beginner') {
+      } else if (topic.toLowerCase() === 'react') {
+        if (difficulty === 'beginner') {
           topics = [
             {
-              id: `${topic}-basics`,
-              title: 'JavaScript Fundamentals',
-              description: 'Core JavaScript concepts and syntax',
-              progress: 0,
+              id: 'react-basics',
+              title: 'React Basics',
+              description: 'Learn the fundamentals of React including components, props, and state.',
               resources: [
                 {
-                  title: 'JavaScript Guide',
+                  title: 'React Main Concepts',
                   type: 'article',
-                  url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide',
-                  description: 'MDN JavaScript guide',
-                  difficulty: 'beginner',
-                  completed: false
+                  url: 'https://reactjs.org/docs/hello-world.html',
+                  description: 'Official React documentation',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'React Tutorial for Beginners',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=Ke90Tje7VS0',
+                  description: 'Video tutorial covering React basics',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Build a React App',
+                  type: 'project',
+                  url: 'https://www.freecodecamp.org/news/react-beginner-handbook/',
+                  description: 'Step-by-step guide to building a React app',
+                  difficulty: 'beginner'
                 }
               ]
             }
           ];
-        } else if (skillLevel === 'intermediate') {
+        } else if (difficulty === 'intermediate') {
           topics = [
             {
-              id: `${topic}-async`,
-              title: 'Asynchronous JavaScript',
-              description: 'Master promises, async/await, and callbacks',
-              progress: 0,
+              id: 'react-hooks',
+              title: 'React Hooks',
+              description: 'Master React Hooks for state and side effects.',
               resources: [
                 {
-                  title: 'JavaScript Promises',
+                  title: 'Hooks Introduction',
                   type: 'article',
-                  url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises',
-                  description: 'Guide to using promises in JavaScript',
-                  difficulty: 'intermediate',
-                  completed: false
+                  url: 'https://reactjs.org/docs/hooks-intro.html',
+                  description: 'Official React hooks documentation',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'React Hooks Tutorial',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=f687hBjwFcM',
+                  description: 'Video tutorial on React hooks',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Building an App with React Hooks',
+                  type: 'project',
+                  url: 'https://www.digitalocean.com/community/tutorials/how-to-build-a-react-to-do-app-with-react-hooks',
+                  description: 'Tutorial for building a todo app with hooks',
+                  difficulty: 'intermediate'
+                }
+              ]
+            }
+          ];
+        } else {
+          topics = [
+            {
+              id: 'react-advanced',
+              title: 'Advanced React Patterns',
+              description: 'Learn advanced React patterns and optimization techniques.',
+              resources: [
+                {
+                  title: 'Advanced React Patterns',
+                  type: 'tutorial',
+                  url: 'https://kentcdodds.com/blog/advanced-react-patterns',
+                  description: 'Kent C. Dodds blog on advanced patterns',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'React Performance Optimization',
+                  type: 'article',
+                  url: 'https://reactjs.org/docs/optimizing-performance.html',
+                  description: 'Official documentation on React performance',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Advanced React Hooks',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=YKmiLcXiMMo',
+                  description: 'Video on advanced usage of React hooks',
+                  difficulty: 'advanced'
+                }
+              ]
+            }
+          ];
+        }
+      } else {
+        // Generic topics for any other subject with direct links to actual resources
+        // Use a resource database approach instead of search links
+        const getResourcesForTopic = (topic: string, level: string) => {
+          // Common learning platforms with topic-specific URLs
+          const resourceMap: Record<string, any> = {
+            // Programming Languages
+            'java': {
+              beginner: [
+                {
+                  title: 'Java Tutorial for Beginners',
+                  type: 'tutorial',
+                  url: 'https://docs.oracle.com/javase/tutorial/getStarted/index.html',
+                  description: 'Official Oracle Java Getting Started tutorial',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Learn Java Programming',
+                  type: 'article',
+                  url: 'https://www.w3schools.com/java/',
+                  description: 'W3Schools comprehensive Java tutorial',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Java Programming for Beginners',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=eIrMbAQSU34',
+                  description: 'Comprehensive Java video course for beginners',
+                  difficulty: 'beginner'
+                }
+              ],
+              intermediate: [
+                {
+                  title: 'Java Collections Framework',
+                  type: 'article',
+                  url: 'https://docs.oracle.com/javase/tutorial/collections/index.html',
+                  description: 'Oracle tutorial on Java Collections',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Java Design Patterns',
+                  type: 'tutorial',
+                  url: 'https://www.baeldung.com/design-patterns-series',
+                  description: 'Comprehensive guide to design patterns in Java',
+                  difficulty: 'intermediate'
+                }
+              ],
+              advanced: [
+                {
+                  title: 'Advanced Java Programming',
+                  type: 'article',
+                  url: 'https://www.baeldung.com/java-advanced',
+                  description: 'In-depth Java tutorials for advanced topics',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Java Concurrency in Practice',
+                  type: 'book',
+                  url: 'https://jcip.net/',
+                  description: 'Essential resource on Java concurrency',
+                  difficulty: 'advanced'
+                }
+              ]
+            },
+            'c++': {
+              beginner: [
+                {
+                  title: 'C++ Tutorial for Beginners',
+                  type: 'tutorial',
+                  url: 'https://www.learncpp.com/',
+                  description: 'Comprehensive C++ tutorial for beginners',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'C++ Programming Course',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=vLnPwxZdW4Y',
+                  description: 'Full C++ course for beginners',
+                  difficulty: 'beginner'
+                }
+              ],
+              intermediate: [
+                {
+                  title: 'C++ Templates and STL',
+                  type: 'article',
+                  url: 'https://en.cppreference.com/w/cpp/language/templates',
+                  description: 'Guide to C++ templates and Standard Template Library',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Effective Modern C++',
+                  type: 'book',
+                  url: 'https://www.oreilly.com/library/view/effective-modern-c/9781491908419/',
+                  description: 'Essential C++ techniques for modern C++ development',
+                  difficulty: 'intermediate'
+                }
+              ],
+              advanced: [
+                {
+                  title: 'Advanced C++ Programming',
+                  type: 'tutorial',
+                  url: 'https://isocpp.org/wiki/faq/cpp11',
+                  description: 'Official ISO C++ FAQ on advanced C++ features',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'CppCon Talks',
+                  type: 'video',
+                  url: 'https://www.youtube.com/user/CppCon',
+                  description: 'Collection of expert C++ conference talks',
+                  difficulty: 'advanced'
+                }
+              ]
+            },
+            // Data Science & ML topics
+            'machine learning': {
+              beginner: [
+                {
+                  title: 'Machine Learning Crash Course',
+                  type: 'tutorial',
+                  url: 'https://developers.google.com/machine-learning/crash-course',
+                  description: 'Google\'s fast-paced practical introduction to machine learning',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Machine Learning for Beginners',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=jGwO_UgTS7I',
+                  description: 'Comprehensive video tutorial on machine learning fundamentals',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Scikit-Learn Tutorials',
+                  type: 'article',
+                  url: 'https://scikit-learn.org/stable/tutorial/index.html',
+                  description: 'Official tutorials for the popular Scikit-Learn library',
+                  difficulty: 'beginner'
+                }
+              ],
+              intermediate: [
+                {
+                  title: 'Deep Learning with PyTorch',
+                  type: 'tutorial',
+                  url: 'https://pytorch.org/tutorials/',
+                  description: 'Official PyTorch tutorials for deep learning',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Hands-On Machine Learning Projects',
+                  type: 'project',
+                  url: 'https://www.kaggle.com/competitions',
+                  description: 'Kaggle competitions for practical machine learning',
+                  difficulty: 'intermediate'
+                }
+              ],
+              advanced: [
+                {
+                  title: 'Deep Learning Specialization',
+                  type: 'tutorial',
+                  url: 'https://www.deeplearning.ai/',
+                  description: 'Andrew Ng\'s comprehensive deep learning courses',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Research Papers in Machine Learning',
+                  type: 'article',
+                  url: 'https://paperswithcode.com/',
+                  description: 'Machine learning papers with code implementations',
+                  difficulty: 'advanced'
+                }
+              ]
+            },
+            'data science': {
+              beginner: [
+                {
+                  title: 'Data Science for Beginners',
+                  type: 'tutorial',
+                  url: 'https://www.datacamp.com/courses/introduction-to-data-science-in-python',
+                  description: 'DataCamp\'s introduction to data science with Python',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Pandas Documentation',
+                  type: 'article',
+                  url: 'https://pandas.pydata.org/docs/getting_started/index.html',
+                  description: 'Official documentation for the Pandas data analysis library',
+                  difficulty: 'beginner'
+                }
+              ],
+              intermediate: [
+                {
+                  title: 'Data Visualization with Matplotlib and Seaborn',
+                  type: 'tutorial',
+                  url: 'https://www.kaggle.com/learn/data-visualization',
+                  description: 'Kaggle\'s tutorial on data visualization',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Statistical Analysis in Python',
+                  type: 'article',
+                  url: 'https://scipy-lectures.org/packages/statistics/index.html',
+                  description: 'Guide to statistical analysis with Python',
+                  difficulty: 'intermediate'
+                }
+              ],
+              advanced: [
+                {
+                  title: 'Advanced Data Science Techniques',
+                  type: 'book',
+                  url: 'https://www.oreilly.com/library/view/python-for-data/9781491957653/',
+                  description: 'Python for Data Analysis book by Wes McKinney',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Data Science Research Papers',
+                  type: 'article',
+                  url: 'https://arxiv.org/list/stat.ML/recent',
+                  description: 'Recent research papers in data science and machine learning',
+                  difficulty: 'advanced'
+                }
+              ]
+            },
+            // Web Development
+            'html': {
+              beginner: [
+                {
+                  title: 'HTML Basics',
+                  type: 'tutorial',
+                  url: 'https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML',
+                  description: 'MDN guide to HTML basics',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'HTML Full Course',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=pQN-pnXPaVg',
+                  description: 'Comprehensive HTML video course',
+                  difficulty: 'beginner'
+                }
+              ],
+              intermediate: [
+                {
+                  title: 'HTML5 Features',
+                  type: 'article',
+                  url: 'https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5',
+                  description: 'Guide to HTML5 features and APIs',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Semantic HTML',
+                  type: 'tutorial',
+                  url: 'https://www.semrush.com/blog/semantic-html5-guide/',
+                  description: 'Guide to semantic HTML elements and best practices',
+                  difficulty: 'intermediate'
+                }
+              ],
+              advanced: [
+                {
+                  title: 'Advanced HTML Techniques',
+                  type: 'article',
+                  url: 'https://htmlreference.io/',
+                  description: 'Comprehensive HTML reference with examples',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'HTML Accessibility',
+                  type: 'tutorial',
+                  url: 'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA',
+                  description: 'Guide to making HTML accessible with ARIA',
+                  difficulty: 'advanced'
+                }
+              ]
+            },
+            'css': {
+              beginner: [
+                {
+                  title: 'CSS Basics',
+                  type: 'tutorial',
+                  url: 'https://developer.mozilla.org/en-US/docs/Learn/CSS/First_steps',
+                  description: 'MDN guide to CSS basics',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'CSS Crash Course',
+                  type: 'video',
+                  url: 'https://www.youtube.com/watch?v=yfoY53QXEnI',
+                  description: 'Quick CSS crash course for beginners',
+                  difficulty: 'beginner'
+                }
+              ],
+              intermediate: [
+                {
+                  title: 'CSS Flexbox Guide',
+                  type: 'article',
+                  url: 'https://css-tricks.com/snippets/css/a-guide-to-flexbox/',
+                  description: 'Comprehensive guide to CSS Flexbox',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'CSS Grid Tutorial',
+                  type: 'tutorial',
+                  url: 'https://cssgrid.io/',
+                  description: 'Wes Bos CSS Grid course',
+                  difficulty: 'intermediate'
+                }
+              ],
+              advanced: [
+                {
+                  title: 'Advanced CSS Animations',
+                  type: 'article',
+                  url: 'https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Animations/Using_CSS_animations',
+                  description: 'Guide to advanced CSS animations',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'CSS Architecture',
+                  type: 'tutorial',
+                  url: 'https://www.smashingmagazine.com/2016/06/battling-bem-extended-edition-common-problems-and-how-to-avoid-them/',
+                  description: 'BEM methodology for CSS architecture',
+                  difficulty: 'advanced'
+                }
+              ]
+            },
+            // General courses for default fallback
+            'default': {
+              beginner: [
+                {
+                  title: 'Introduction to Programming',
+                  type: 'tutorial',
+                  url: 'https://www.freecodecamp.org/learn',
+                  description: 'FreeCodeCamp\'s curriculum for beginners',
+                  difficulty: 'beginner'
+                },
+                {
+                  title: 'Khan Academy Computer Programming',
+                  type: 'tutorial',
+                  url: 'https://www.khanacademy.org/computing/computer-programming',
+                  description: 'Khan Academy\'s free programming courses',
+                  difficulty: 'beginner'
+                }
+              ],
+              intermediate: [
+                {
+                  title: 'EdX Computer Science Courses',
+                  type: 'tutorial',
+                  url: 'https://www.edx.org/learn/computer-science',
+                  description: 'Computer science courses from top universities',
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: 'Coursera Technology Learning',
+                  type: 'tutorial',
+                  url: 'https://www.coursera.org/browse/computer-science',
+                  description: 'Technology courses from leading institutions',
+                  difficulty: 'intermediate'
+                }
+              ],
+              advanced: [
+                {
+                  title: 'MIT OpenCourseWare',
+                  type: 'tutorial',
+                  url: 'https://ocw.mit.edu/search/?d=Electrical%20Engineering%20and%20Computer%20Science',
+                  description: 'Advanced computer science courses from MIT',
+                  difficulty: 'advanced'
+                },
+                {
+                  title: 'Stanford Online Courses',
+                  type: 'tutorial',
+                  url: 'https://online.stanford.edu/explore?type=course&field_topic_target_id=31',
+                  description: 'Computer science courses from Stanford University',
+                  difficulty: 'advanced'
+                }
+              ]
+            }
+          };
+          
+          // Normalize the topic name for lookup
+          const normalizedTopic = topic.toLowerCase().trim();
+          
+          // Try to find specialized resources for the topic
+          const topicResources = resourceMap[normalizedTopic] || resourceMap['default'];
+          
+          // Return resources based on difficulty level
+          return topicResources[level.toLowerCase()] || topicResources['beginner'];
+        };
+        
+        if (difficulty === 'beginner') {
+          const fundamentalsResources = getResourcesForTopic(topic, 'beginner');
+          
+          topics = [
+            {
+              id: `${topic.toLowerCase()}-fundamentals`,
+              title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Fundamentals`,
+              description: `Learn the core concepts and basics of ${topic}.`,
+              resources: fundamentalsResources
+            },
+            {
+              id: `${topic.toLowerCase()}-concepts`,
+              title: `Core ${topic.charAt(0).toUpperCase() + topic.slice(1)} Concepts`,
+              description: `Understand the essential concepts in ${topic}.`,
+              resources: [
+                {
+                  title: `${topic} Concepts Explained`,
+                  type: 'article',
+                  url: 'https://www.freecodecamp.org/news/',
+                  description: `Articles explaining key ${topic} concepts on FreeCodeCamp`,
+                  difficulty: 'beginner'
+                },
+                {
+                  title: `Getting Started with ${topic}`,
+                  type: 'tutorial',
+                  url: 'https://www.w3schools.com/',
+                  description: `W3Schools tutorials on ${topic}`,
+                  difficulty: 'beginner'
+                }
+              ]
+            }
+          ];
+        } else if (difficulty === 'intermediate') {
+          const intermediateResources = getResourcesForTopic(topic, 'intermediate');
+          
+          topics = [
+            {
+              id: `${topic.toLowerCase()}-intermediate`,
+              title: `Intermediate ${topic.charAt(0).toUpperCase() + topic.slice(1)}`,
+              description: `Build upon your basic knowledge of ${topic} with more advanced concepts.`,
+              resources: intermediateResources
+            },
+            {
+              id: `${topic.toLowerCase()}-practical`,
+              title: `Practical ${topic.charAt(0).toUpperCase() + topic.slice(1)} Applications`,
+              description: `Learn how to apply ${topic} in practical scenarios.`,
+              resources: [
+                {
+                  title: `${topic} Real-world Examples`,
+                  type: 'project',
+                  url: 'https://github.com/trending',
+                  description: `Trending GitHub projects related to ${topic}`,
+                  difficulty: 'intermediate'
+                },
+                {
+                  title: `${topic} Case Studies`,
+                  type: 'article',
+                  url: 'https://medium.com/topic/technology',
+                  description: `Medium articles on ${topic} technology`,
+                  difficulty: 'intermediate'
+                }
+              ]
+            }
+          ];
+        } else {
+          const advancedResources = getResourcesForTopic(topic, 'advanced');
+          
+          topics = [
+            {
+              id: `${topic.toLowerCase()}-advanced`,
+              title: `Advanced ${topic.charAt(0).toUpperCase() + topic.slice(1)} Techniques`,
+              description: `Master advanced concepts and techniques in ${topic}.`,
+              resources: advancedResources
+            },
+            {
+              id: `${topic.toLowerCase()}-cutting-edge`,
+              title: `Cutting-edge ${topic.charAt(0).toUpperCase() + topic.slice(1)} Developments`,
+              description: `Stay updated with the latest developments in ${topic}.`,
+              resources: [
+                {
+                  title: `${topic} Research Advances`,
+                  type: 'article',
+                  url: 'https://arxiv.org/search/?query=' + encodeURIComponent(topic) + '&searchtype=all',
+                  description: `Research papers on ${topic} from arXiv`,
+                  difficulty: 'advanced'
+                },
+                {
+                  title: `Advanced ${topic} Techniques`,
+                  type: 'tutorial',
+                  url: 'https://www.udemy.com/courses/search/?src=ukw&q=' + encodeURIComponent(topic),
+                  description: `Udemy advanced courses on ${topic}`,
+                  difficulty: 'advanced'
                 }
               ]
             }
@@ -376,42 +1214,12 @@ export default function LearningPlansPage() {
         }
       }
       
-      // If no specific topics were created, use default
-      if (topics.length === 0) {
-        topics = [
-          {
-            id: `${topic}-basics`,
-            title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Basics`,
-            description: `Learn the fundamentals of ${topic}`,
-            progress: 0,
-            resources: [
-              {
-                title: `Introduction to ${topic}`,
-                type: 'article',
-                url: `https://example.com/${topic}/intro`,
-                description: `A beginner-friendly introduction to ${topic}`,
-                difficulty: 'beginner',
-                completed: false
-              },
-              {
-                title: `${topic} Tutorial for Beginners`,
-                type: 'video',
-                url: `https://example.com/${topic}/tutorial`,
-                description: `Step-by-step guide to ${topic}`,
-                difficulty: 'beginner',
-                completed: false
-              }
-            ]
-          }
-        ];
-      }
-      
-      // Create a new mock plan
+      // Create a new plan
       const newPlan: LearningPlan = {
-        id: `${topic}-${Date.now()}`,
+        id: `${topic.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
         title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Learning Path`,
-        description: `A personalized learning plan for ${topic} based on your assessment results (Score: ${score}%).`,
-        estimatedTime: '5 hours',
+        description: `A personalized learning plan for ${topic} at ${difficulty} level.`,
+        estimatedTime: difficulty === 'beginner' ? '5-10 hours' : (difficulty === 'intermediate' ? '10-20 hours' : '20-40 hours'),
         skillLevel: skillLevel,
         createdAt: new Date().toISOString(),
         progress: 0,
@@ -493,13 +1301,37 @@ export default function LearningPlansPage() {
   }
   
   const handleCreatePlan = () => {
-    // In a real app, this would open a form or redirect to a page
-    // For demo, we'll just generate a random plan
-    const topics = ['javascript', 'python', 'react', 'nodejs'];
-    const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-    const randomScore = Math.floor(Math.random() * 100);
+    setShowCreateModal(true);
+  };
+  
+  const handleCreatePlanSubmit = () => {
+    if (!newPlanData.topic.trim()) {
+      return; // Don't submit if topic is empty
+    }
     
-    generateLearningPlan(randomTopic, randomScore);
+    generateLearningPlan(newPlanData.topic.toLowerCase(), 0, newPlanData.difficulty);
+    setShowCreateModal(false);
+    
+    // Reset form
+    setNewPlanData({
+      topic: '',
+      difficulty: 'beginner'
+    });
+  };
+  
+  const handleResetPlans = () => {
+    if (confirm('Are you sure you want to reset all your learning plans? This action cannot be undone.')) {
+      localStorage.removeItem('learningPlans');
+      setLearningPlans(mockPlans);
+      
+      if (mockPlans.length > 0) {
+        setActivePlanId(mockPlans[0].id);
+        setSelectedTopic(mockPlans[0].topics[0].id);
+      } else {
+        setActivePlanId(null);
+        setSelectedTopic(null);
+      }
+    }
   };
   
   const activePlan = learningPlans.find(p => p.id === activePlanId);
@@ -534,6 +1366,11 @@ export default function LearningPlansPage() {
           <Button onClick={handleCreatePlan}>
             Create New Plan
           </Button>
+          {learningPlans.length > mockPlans.length && (
+            <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={handleResetPlans}>
+              Reset Plans
+            </Button>
+          )}
         </div>
       </div>
       
@@ -707,6 +1544,79 @@ export default function LearningPlansPage() {
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Custom Modal Implementation Instead of Dialog Component */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="relative p-4 w-full max-w-md h-auto">
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
+                    Create New Learning Plan
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="topic" className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                        Topic
+                      </label>
+                      <input 
+                        type="text" 
+                        id="topic" 
+                        value={newPlanData.topic}
+                        onChange={(e) => setNewPlanData({...newPlanData, topic: e.target.value})}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        placeholder="e.g. JavaScript, Python, Machine Learning"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="difficulty" className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                        Difficulty Level
+                      </label>
+                      <select
+                        id="difficulty"
+                        value={newPlanData.difficulty}
+                        onChange={(e) => setNewPlanData({...newPlanData, difficulty: e.target.value})}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      >
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-6 space-x-2 rounded-b border-t border-gray-200 dark:border-gray-600">
+                <button
+                  type="button"
+                  className="px-5 py-2.5 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 hover:text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  onClick={() => {
+                    if (newPlanData.topic) {
+                      generateLearningPlan(newPlanData.topic, 0, newPlanData.difficulty);
+                      setShowCreateModal(false);
+                      setNewPlanData({
+                        topic: '',
+                        difficulty: 'beginner'
+                      });
+                    }
+                  }}
+                >
+                  Create Plan
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FcGoogle } from "react-icons/fc";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -231,5 +231,14 @@ export default function RegisterPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+// Wrap with Suspense to handle useSearchParams CSR bailout
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center">Loading registration form...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 } 

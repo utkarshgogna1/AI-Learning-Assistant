@@ -8,9 +8,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
+import { supabase } from '@/lib/supabase';
 
 interface QuizQuestion {
   id: number;
@@ -31,7 +31,6 @@ interface QuizProps {
 const QuizPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClientComponentClient();
   
   // Parse query parameters
   const topic = searchParams.get('topic') || 'python';
@@ -68,7 +67,7 @@ const QuizPage = () => {
     };
     
     fetchUser();
-  }, [supabase]);
+  }, []);
   
   // Fetch quiz questions
   useEffect(() => {

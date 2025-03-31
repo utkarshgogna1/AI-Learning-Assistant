@@ -3,6 +3,7 @@
     "vercel-build": "cd ai-learning-assistant && npm install && npm run build"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.1.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.0.2"

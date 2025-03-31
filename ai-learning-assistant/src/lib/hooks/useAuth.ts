@@ -45,8 +45,8 @@ export function useAuth() {
       
       if (error) throw error;
       
-      // Force a hard navigation to the dashboard
-      window.location.href = '/dashboard';
+      // Use Next.js router for client-side navigation
+      router.push('/dashboard');
       
       return { data, error: null };
     } catch (error: any) {
@@ -62,8 +62,8 @@ export function useAuth() {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Force a hard navigation to the login page
-      window.location.href = '/login';
+      // Use Next.js router for client-side navigation
+      router.push('/login');
       
       return { error: null };
     } catch (error: any) {

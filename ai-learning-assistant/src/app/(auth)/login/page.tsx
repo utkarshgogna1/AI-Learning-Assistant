@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FcGoogle } from "react-icons/fc";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/dashboard';
@@ -195,5 +195,14 @@ export default function LoginPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+// Wrap with Suspense to handle useSearchParams CSR bailout
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center">Loading login form...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 } 
