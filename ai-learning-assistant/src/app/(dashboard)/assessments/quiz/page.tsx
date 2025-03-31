@@ -2,14 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Spinner } from '@/components/ui/spinner';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 interface QuizQuestion {
@@ -22,12 +15,6 @@ interface QuizQuestion {
   topic: string;
 }
 
-interface QuizProps {
-  topic: string;
-  difficulty?: 'easy' | 'medium' | 'hard' | 'mixed';
-  questionCount?: number;
-}
-
 const QuizPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,10 +23,7 @@ const QuizPage = () => {
   const topic = searchParams.get('topic') || 'python';
   const rawDifficulty = searchParams.get('difficulty') || 'mixed';
   
-  // Map between the different difficulty naming conventions
-  // Our Assessment interface uses: 'beginner', 'intermediate', 'advanced'
-  // The quiz component uses: 'easy', 'medium', 'hard', 'mixed'
-  // The API expects: 'beginner', 'intermediate', 'advanced'
+  // Map between different difficulty naming conventions
   const difficulty = rawDifficulty === 'beginner' ? 'easy' :
                      rawDifficulty === 'intermediate' ? 'medium' :
                      rawDifficulty === 'advanced' ? 'hard' : 
@@ -76,105 +60,54 @@ const QuizPage = () => {
       setError(null);
       
       try {
-        const response = await fetch('/api/quiz/generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        // For development - use mock data to avoid API dependency
+        const mockQuestions: QuizQuestion[] = [
+          {
+            id: 1,
+            question: 'What is Python primarily used for?',
+            options: [
+              'Web development only',
+              'Data analysis, AI, web development, automation, and more',
+              'Mobile app development only',
+              'Game development only'
+            ],
+            correctAnswer: 1,
+            explanation: 'Python is a versatile language used for many purposes including data analysis, AI/ML, web development with frameworks like Django and Flask, automation, and more.',
+            difficulty: 'easy',
+            topic: 'python'
           },
-          body: JSON.stringify({
-            topic,
-            // Map back to what the API expects
-            difficulty: difficulty === 'easy' ? 'beginner' :
-                        difficulty === 'medium' ? 'intermediate' :
-                        difficulty === 'hard' ? 'advanced' : 'beginner',
-            questionCount,
-            userId,
-          }),
-        });
+          {
+            id: 2,
+            question: 'What is a Python list comprehension?',
+            options: [
+              'A way to create dictionaries',
+              'A concise way to create lists based on existing lists',
+              'A type of function',
+              'A method to import modules'
+            ],
+            correctAnswer: 1,
+            explanation: 'List comprehensions provide a concise way to create lists based on existing lists or other iterables.',
+            difficulty: 'medium',
+            topic: 'python'
+          },
+          {
+            id: 3,
+            question: 'What does the "self" parameter in Python class methods represent?',
+            options: [
+              'A keyword required by the Python interpreter',
+              'A module that must be imported',
+              'A reference to the current instance of the class',
+              'A way to make methods static'
+            ],
+            correctAnswer: 2,
+            explanation: 'In Python class methods, "self" is a reference to the current instance of the class, allowing access to the instance\'s attributes and methods.',
+            difficulty: 'medium',
+            topic: 'python'
+          }
+        ];
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch quiz questions');
-        }
-        
-        const data = await response.json();
-        // Check if data contains questions directly or in a 'questions' property
-        const questions = data.questions || data.quiz || [];
-        
-        if (!questions || questions.length === 0) {
-          throw new Error('No questions received from the API');
-        }
-        
-        // Transform questions if needed to match our QuizQuestion interface
-        const formattedQuestions = questions.map((q: any, index: number) => ({
-          id: q.id || index + 1,
-          question: q.question,
-          options: q.options,
-          correctAnswer: typeof q.correctAnswer === 'string' 
-            ? q.options.indexOf(q.correctAnswer) 
-            : q.correctAnswer,
-          explanation: q.explanation,
-          difficulty: q.difficulty === 'beginner' ? 'easy' :
-                      q.difficulty === 'intermediate' ? 'medium' :
-                      q.difficulty === 'advanced' ? 'hard' : q.difficulty,
-          topic: q.topic || topic
-        }));
-        
-        setQuestions(formattedQuestions);
-        setSelectedAnswers(new Array(formattedQuestions.length).fill(-1));
-      } catch (err) {
-        console.error('Error fetching quiz:', err);
-        setError('Failed to load quiz questions. Please try again later.');
-        
-        // For development - use mock data if API fails
-        if (process.env.NODE_ENV === 'development') {
-          const mockQuestions: QuizQuestion[] = [
-            {
-              id: 1,
-              question: 'What is Python primarily used for?',
-              options: [
-                'Web development only',
-                'Data analysis, AI, web development, automation, and more',
-                'Mobile app development only',
-                'Game development only'
-              ],
-              correctAnswer: 1,
-              explanation: 'Python is a versatile language used for many purposes including data analysis, AI/ML, web development with frameworks like Django and Flask, automation, and more.',
-              difficulty: 'easy',
-              topic: 'python'
-            },
-            {
-              id: 2,
-              question: 'What is a Python list comprehension?',
-              options: [
-                'A way to create dictionaries',
-                'A concise way to create lists based on existing lists',
-                'A type of function',
-                'A method to import modules'
-              ],
-              correctAnswer: 1,
-              explanation: 'List comprehensions provide a concise way to create lists based on existing lists or other iterables.',
-              difficulty: 'medium',
-              topic: 'python'
-            },
-            {
-              id: 3,
-              question: 'What does the "self" parameter in Python class methods represent?',
-              options: [
-                'A keyword required by the Python interpreter',
-                'A module that must be imported',
-                'A reference to the current instance of the class',
-                'A way to make methods static'
-              ],
-              correctAnswer: 2,
-              explanation: 'In Python class methods, "self" is a reference to the current instance of the class, allowing access to the instance\'s attributes and methods.',
-              difficulty: 'medium',
-              topic: 'python'
-            }
-          ];
-          
-          setQuestions(mockQuestions);
-          setSelectedAnswers(new Array(mockQuestions.length).fill(-1));
-        }
+        setQuestions(mockQuestions);
+        setSelectedAnswers(new Array(mockQuestions.length).fill(-1));
       } finally {
         setLoading(false);
       }
@@ -224,277 +157,215 @@ const QuizPage = () => {
       percentage: Math.round((correctCount / questions.length) * 100)
     };
   };
-  
-  // Analyze knowledge gaps
-  const analyzeKnowledgeGaps = () => {
-    const incorrectQuestions = questions.filter((_, index) => 
-      selectedAnswers[index] !== questions[index].correctAnswer
-    );
-    
-    // Group by topic
-    const topicGaps: Record<string, { count: number, questions: QuizQuestion[] }> = {};
-    
-    incorrectQuestions.forEach(question => {
-      if (!topicGaps[question.topic]) {
-        topicGaps[question.topic] = { count: 0, questions: [] };
-      }
-      
-      topicGaps[question.topic].count += 1;
-      topicGaps[question.topic].questions.push(question);
-    });
-    
-    return Object.entries(topicGaps)
-      .sort((a, b) => b[1].count - a[1].count)
-      .map(([topic, data]) => ({
-        topic,
-        count: data.count,
-        questions: data.questions
-      }));
-  };
-  
-  // Save quiz results
-  const saveQuizResults = async () => {
-    if (!userId) {
-      console.log('No user ID found, using default guest-user');
-    }
-    
-    const scoreData = calculateScore();
-    const gaps = analyzeKnowledgeGaps();
-    
-    // Log the data we're going to use
-    console.log('Quiz results data:', {
-      userId: userId || 'guest-user',
-      topic,
-      difficulty,
-      score: scoreData.score,
-      total: scoreData.total,
-      percentage: scoreData.percentage,
-      completedAt: new Date().toISOString(),
-      knowledgeGaps: gaps.map(gap => gap.topic)
-    });
-    
-    // Construct the URL with parameters
-    const learningPlanUrl = `/learning-plans?topic=${encodeURIComponent(topic)}&source=quiz&score=${scoreData.percentage}`;
-    console.log('Navigating to URL:', learningPlanUrl);
-    
-    // Use direct window location for navigation
-    window.location.href = learningPlanUrl;
-  };
-  
-  // Get difficulty color
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-  
-  // Render loading state
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] p-6">
-        <Spinner size="lg" />
-        <p className="mt-4 text-lg text-gray-600">Loading quiz questions...</p>
-      </div>
-    );
-  }
-  
-  // Render error message
-  if (error) {
-    return (
-      <div className="container max-w-4xl mx-auto p-6">
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <div className="mt-4">
-          <Button onClick={() => window.location.href = '/assessments'}>
-            Return to Assessments
-          </Button>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>Loading quiz questions...</p>
         </div>
       </div>
     );
   }
-  
-  // Render quiz results
-  if (showResults) {
-    const scoreData = calculateScore();
-    const gaps = analyzeKnowledgeGaps();
-    
+
+  if (error) {
     return (
-      <div className="container max-w-4xl mx-auto p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Quiz Results: {topic.charAt(0).toUpperCase() + topic.slice(1)}</CardTitle>
-            <CardDescription>
-              You scored {scoreData.score} out of {scoreData.total} ({scoreData.percentage}%)
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2">Your Score</h3>
-              <Progress value={scoreData.percentage} className="h-3 mb-2" />
-              <p className="text-sm text-gray-500">
-                {scoreData.percentage >= 80 
-                  ? 'Excellent! You have a strong understanding of this topic.' 
-                  : scoreData.percentage >= 60 
-                    ? 'Good job! You have a decent understanding, but there\'s room for improvement.' 
-                    : 'You might need more practice with this topic.'}
-              </p>
-            </div>
-            
-            {gaps.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-medium mb-2">Knowledge Gaps</h3>
-                <div className="space-y-4">
-                  {gaps.map((gap, index) => (
-                    <div key={index} className="border rounded-md p-4">
-                      <h4 className="font-medium">
-                        {gap.topic.charAt(0).toUpperCase() + gap.topic.slice(1)}
-                        <Badge className="ml-2 bg-orange-100 text-orange-800">
-                          {gap.count} {gap.count === 1 ? 'question' : 'questions'} missed
-                        </Badge>
-                      </h4>
-                      <ul className="mt-2 list-disc list-inside text-sm text-gray-600">
-                        {gap.questions.map((q, i) => (
-                          <li key={i}>{q.question}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-2">Recommended Next Steps</h3>
-              <ul className="list-disc list-inside space-y-2 text-gray-600">
-                <li>Review the questions you got wrong and their explanations</li>
-                <li>Generate a personalized learning plan based on your quiz results</li>
-                <li>Practice with more quizzes after studying the suggested materials</li>
-              </ul>
-            </div>
-          </CardContent>
-          
-          <CardFooter className="flex justify-between flex-wrap gap-4">
-            <Button variant="outline" onClick={() => window.location.href = '/assessments'}>
-              Back to Assessments
-            </Button>
-            <div className="flex gap-2">
-              <Button onClick={saveQuizResults}>
-                Generate Learning Plan
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  const scoreData = calculateScore();
-                  const directUrl = `/learning-plans?topic=${encodeURIComponent(topic)}&source=quiz&score=${scoreData.percentage}`;
-                  window.open(directUrl, '_blank');
-                }}
-              >
-                Open Plan in New Tab
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          <p>{error}</p>
+        </div>
+        <button 
+          onClick={() => router.push('/assessments')}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Return to Assessments
+        </button>
       </div>
     );
   }
-  
-  // Render current question
+
+  if (showResults) {
+    const { score, total, percentage } = calculateScore();
+    
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h1 className="text-3xl font-bold mb-4">Quiz Results</h1>
+          <p className="text-lg mb-4">Topic: <span className="font-semibold">{topic}</span></p>
+          
+          <div className="mb-6">
+            <p className="text-lg">Your score: <span className="font-bold">{score}/{total} ({percentage}%)</span></p>
+            <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
+              <div 
+                className="bg-blue-600 h-4 rounded-full" 
+                style={{ width: `${percentage}%` }}
+              ></div>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-4">
+            <Link 
+              href="/assessments" 
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            >
+              Back to Assessments
+            </Link>
+            <Link 
+              href={`/assessments/quiz?topic=${topic}&difficulty=${difficulty}`} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Take Another Quiz
+            </Link>
+          </div>
+        </div>
+        
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Question Review</h2>
+          {questions.map((question, index) => (
+            <div 
+              key={question.id} 
+              className="bg-white rounded-lg shadow-md p-6 mb-4"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold">Question {index + 1}</h3>
+                <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                  selectedAnswers[index] === question.correctAnswer
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {selectedAnswers[index] === question.correctAnswer ? 'Correct' : 'Incorrect'}
+                </span>
+              </div>
+              
+              <p className="mb-4">{question.question}</p>
+              
+              <div className="space-y-2 mb-4">
+                {question.options.map((option, optionIndex) => (
+                  <div 
+                    key={optionIndex} 
+                    className={`p-3 rounded border ${
+                      optionIndex === question.correctAnswer
+                        ? 'bg-green-50 border-green-200'
+                        : optionIndex === selectedAnswers[index] && optionIndex !== question.correctAnswer
+                          ? 'bg-red-50 border-red-200'
+                          : 'border-gray-200'
+                    }`}
+                  >
+                    {option}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                <p className="font-semibold">Explanation:</p>
+                <p>{question.explanation}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const currentQuestion = questions[currentQuestionIndex];
   
   return (
-    <div className="container max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">
-              Question {currentQuestionIndex + 1} of {questions.length}
-            </span>
-            <Badge className={`text-xs ${getDifficultyColor(currentQuestion?.difficulty)}`}>
-              {currentQuestion?.difficulty}
-            </Badge>
-          </div>
-          <Badge variant="outline">
-            {topic.charAt(0).toUpperCase() + topic.slice(1)}
-          </Badge>
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Quiz: {topic}</h1>
+        <div className="text-sm text-gray-600">
+          Question {currentQuestionIndex + 1} of {questions.length}
         </div>
-        <Progress 
-          value={((currentQuestionIndex + 1) / questions.length) * 100} 
-          className="h-2"
-        />
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>{currentQuestion?.question}</CardTitle>
-        </CardHeader>
+      <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+        <div 
+          className="bg-blue-600 h-2 rounded-full" 
+          style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+        ></div>
+      </div>
+      
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex justify-between items-start mb-4">
+          <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+            {difficulty === 'easy' ? 'Beginner' : 
+             difficulty === 'medium' ? 'Intermediate' : 
+             difficulty === 'hard' ? 'Advanced' : 'Mixed'}
+          </span>
+        </div>
         
-        <CardContent>
-          <RadioGroup
-            value={selectedAnswers[currentQuestionIndex].toString()}
-            onValueChange={(value) => handleAnswerSelect(parseInt(value, 10))}
-          >
-            {currentQuestion?.options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2 py-2">
-                <RadioGroupItem 
-                  value={index.toString()} 
-                  id={`option-${index}`}
-                />
-                <Label 
-                  htmlFor={`option-${index}`}
-                  className="flex-grow cursor-pointer py-2"
-                >
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-          
-          {showExplanation && (
-            <div className="mt-6">
-              <Alert className="bg-blue-50">
-                <AlertTitle>Explanation</AlertTitle>
-                <AlertDescription>
-                  {currentQuestion?.explanation}
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-        </CardContent>
+        <h2 className="text-xl font-semibold mb-4">{currentQuestion.question}</h2>
         
-        <CardFooter className="flex justify-between flex-wrap gap-4">
-          <div>
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentQuestionIndex === 0}
+        <div className="space-y-3 mb-6">
+          {currentQuestion.options.map((option, index) => (
+            <div 
+              key={index}
+              onClick={() => handleAnswerSelect(index)}
+              className={`p-4 rounded border cursor-pointer hover:bg-gray-50 ${
+                selectedAnswers[currentQuestionIndex] === index
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200'
+              }`}
             >
-              Previous
-            </Button>
-            {!showExplanation && selectedAnswers[currentQuestionIndex] !== -1 && (
-              <Button
-                variant="ghost"
-                className="ml-2"
-                onClick={() => setShowExplanation(true)}
-              >
-                Show Explanation
-              </Button>
-            )}
+              <div className="flex items-center">
+                <div className={`w-5 h-5 flex items-center justify-center rounded-full border mr-3 ${
+                  selectedAnswers[currentQuestionIndex] === index
+                    ? 'border-blue-500 bg-blue-500 text-white'
+                    : 'border-gray-400'
+                }`}>
+                  {selectedAnswers[currentQuestionIndex] === index && (
+                    <span className="text-xs">✓</span>
+                  )}
+                </div>
+                {option}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {showExplanation && (
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <p className="font-semibold">Explanation:</p>
+            <p>{currentQuestion.explanation}</p>
           </div>
+        )}
+        
+        <div className="flex justify-between">
+          <button 
+            onClick={handlePrevious}
+            disabled={currentQuestionIndex === 0}
+            className={`px-4 py-2 rounded ${
+              currentQuestionIndex === 0
+                ? 'bg-gray-100 text-gray-400'
+                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+            }`}
+          >
+            Previous
+          </button>
           
-          <Button
+          {!showExplanation && selectedAnswers[currentQuestionIndex] !== -1 && (
+            <button 
+              onClick={() => setShowExplanation(true)}
+              className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+            >
+              Show Explanation
+            </button>
+          )}
+          
+          <button 
             onClick={handleNext}
             disabled={selectedAnswers[currentQuestionIndex] === -1}
+            className={`px-4 py-2 rounded ${
+              selectedAnswers[currentQuestionIndex] === -1
+                ? 'bg-blue-300 text-white'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
           >
-            {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish Quiz'}
-          </Button>
-        </CardFooter>
-      </Card>
+            {currentQuestionIndex === questions.length - 1 ? 'Finish Quiz' : 'Next'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
